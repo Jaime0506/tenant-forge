@@ -1,5 +1,5 @@
 [package]
-name = "migrations-controlnext-app"
+name = "tenant-forge"
 version = "0.1.0"
 description = "A Tauri App"
 authors = ["you"]
