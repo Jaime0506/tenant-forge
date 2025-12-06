@@ -37,10 +37,8 @@ export default function useStoreManagement() {
     };
     const setIsFirstTimeInStore = async (isFirstTime: boolean) => {
         try {
-            console.log("Setting isFirstTime to:", isFirstTime);
             await storeManagement.set("isFirstTime", isFirstTime);
             setIsFirstTime(isFirstTime);
-            console.log("Successfully set isFirstTime to:", isFirstTime);
         } catch (error) {
             console.error("Error setting isFirstTime:", error);
             throw error;
@@ -51,10 +49,6 @@ export default function useStoreManagement() {
         await getTheme();
         await getIsFirstTime();
     };
-
-    // useEffect(() => {
-    //     resetStore();
-    // }, []);
 
     useEffect(() => {
         getInitialData();
