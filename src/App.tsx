@@ -1,5 +1,5 @@
-import "./App.css";
-import { Button } from "./components/ui/button";
+
+import AppRouter from "./router/AppRouter";
 
 function App() {
   // const [greetMsg, setGreetMsg] = useState("");
@@ -11,9 +11,8 @@ function App() {
   // }
 
   return (
-    <main className="container bg-red-500">
-      Esto es una prueba de jaime
-      <Button>Click me</Button>
+    <main className="flex w-full h-screen">
+      <AppRouter />
     </main>
   );
 }
