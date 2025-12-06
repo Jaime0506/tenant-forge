@@ -9,11 +9,8 @@ export default function MainPage() {
 
   const handleResetFirstTime = async () => {
     try {
-      console.log("handleResetFirstTime - start");
       await setIsFirstTimeInStore(true);
-      console.log("handleResetFirstTime - after setIsFirstTimeInStore");
       navigate("/", { replace: true });
-      console.log("handleResetFirstTime - after navigate");
     } catch (error) {
       console.error("Error in handleResetFirstTime:", error);
     }
