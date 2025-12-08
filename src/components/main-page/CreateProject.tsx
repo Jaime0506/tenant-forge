@@ -16,10 +16,10 @@ export default function CreateProject() {
         handleReset
     } = useProject();
 
-    const onSubmit = (e: React.FormEvent,) => {
+    const onSubmit = async (e: React.FormEvent,) => {
         e.preventDefault()
 
-        handleSubmit(async (data: ProjectData) => {
+        await handleSubmit(async (data: ProjectData) => {
             await createProject(data)
         })
     }
