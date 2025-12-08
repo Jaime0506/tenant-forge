@@ -9,8 +9,6 @@ export default function AppRouter() {
   const { isFirstTime } = useStoreManagement();
 
   useEffect(() => {
-    console.log("isFirstTime", isFirstTime);
-
     if (isFirstTime !== undefined && isFirstTime !== null && !isFirstTime) {
       navigate("/main");
     }
