@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { useProject } from "@/hooks/useProject";
+import { ProjectData, useProject } from "@/hooks/useProject";
+import { useProjectService } from "@/hooks/useProjectService";
 
 
 export default function CreateProject() {
+    const { createProject } = useProjectService()
+
     const {
         form,
         updateForm,
@@ -16,7 +19,9 @@ export default function CreateProject() {
     const onSubmit = (e: React.FormEvent,) => {
         e.preventDefault()
 
-        handleSubmit()
+        handleSubmit(async (data: ProjectData) => {
+            await createProject(data)
+        })
     }
 
     return (
