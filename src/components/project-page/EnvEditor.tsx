@@ -119,7 +119,7 @@ const getEnvHighlightStyle = (isDark: boolean): HighlightStyle => {
 };
 
 // Extensión de tema personalizado para .env que se adapta al tema de la app
-const envTheme = EditorView.theme({
+const getEnvTheme = (isDark: boolean) => EditorView.theme({
     "&": {
         fontSize: "14px",
         fontFamily: "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace",
@@ -161,6 +161,12 @@ const envTheme = EditorView.theme({
     ".cm-line": {
         color: "var(--foreground)",
     },
+    ".cm-activeLine": {
+        backgroundColor: isDark ? "rgba(255, 255, 255, 0.07)" : "rgba(0, 0, 0, 0.06)",
+    },
+    ".cm-activeLineGutter": {
+        backgroundColor: "transparent",
+    },
 });
 
 export default function EnvEditor({ value, onChange }: EnvEditorProps) {
@@ -197,7 +203,7 @@ export default function EnvEditor({ value, onChange }: EnvEditorProps) {
     const envExtensions: Extension[] = [
         envParser,
         syntaxHighlighting(getEnvHighlightStyle(isDark)),
-        envTheme,
+        getEnvTheme(isDark),
         EditorView.lineWrapping,
     ];
 
