@@ -1,9 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { ProjectData, useProject } from "@/hooks/useProject";
 import { useProjectService } from "@/hooks/useProjectService";
+import { useState } from "react";
+import ButtonCustom from "../ui-custom/ButtonCustom";
 
+interface CreateProjectProps {
+    onProjectCreated?: () => void;
+}
 
-export default function CreateProject() {
+export default function CreateProject({ onProjectCreated }: CreateProjectProps) {
+    const [isLoading, setIsLoading] = useState(false);
     const { createProject } = useProjectService()
 
     const {
@@ -19,20 +25,28 @@ export default function CreateProject() {
     const onSubmit = async (e: React.FormEvent,) => {
         e.preventDefault()
 
-        await handleSubmit(async (data: ProjectData) => {
-            await createProject(data)
-        })
+        try {
+            setIsLoading(true);
+            const result = await handleSubmit(async (data: ProjectData) => {
+                await createProject(data)
+            })
+
+            console.log(result);
+            
+            // Llamar al callback después de crear el proyecto exitosamente
+            if (onProjectCreated) {
+                onProjectCreated();
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsLoading(false);
+            handleReset();
+        }
     }
 
     return (
-        <main className="flex w-full h-full rounded-lg border border-gray-200 dark:border-gray-800 flex-col gap-6 p-6 bg-card">
-            <div className="flex flex-col gap-2">
-                <h1 className="text-2xl font-bold text-foreground">Crear proyecto</h1>
-                <p className="text-sm text-muted-foreground">
-                    Completa la información para crear un nuevo proyecto. Solo el nombre es obligatorio.
-                </p>
-            </div>
-
+        <div className="flex w-full flex-col gap-6">
             <form onSubmit={onSubmit} className="flex flex-col gap-6 flex-1">
                 {/* Nombre del proyecto */}
                 <div className="flex flex-col gap-2">
@@ -122,11 +136,11 @@ export default function CreateProject() {
                     >
                         Limpiar
                     </Button>
-                    <Button type="submit" disabled={!form.name.trim()}>
+                    <ButtonCustom type="submit" isLoading={isLoading}>
                         Crear proyecto
-                    </Button>
+                    </ButtonCustom>
                 </div>
             </form>
-        </main>
+        </div>
     );
 }

@@ -8,6 +8,7 @@ export interface ProjectForm {
 }
 
 export interface ProjectData {
+    id?: number;
     name: string;
     description: string;
     tags: string[];
@@ -66,9 +67,6 @@ export const useProject = <T = void>(
             description: form.description,
             tags: form.tags,
         };
-
-        // Aquí puedes agregar la lógica para guardar el proyecto
-        console.log(projectData);
 
         const callback = customCallback || onSubmitCallback;
         if (callback) {

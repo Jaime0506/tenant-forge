@@ -12,3 +12,7 @@ export const createProjectService = (data: ProjectData) => {
         ...payload,
     });
 };
+
+export const getProjectsService = () => {
+    return invoke("get_projects");
+};
