@@ -12,9 +12,9 @@
   "app": {
     "windows": [
       {
-        "title": "tenant-forge",
-        "width": 800,
-        "height": 600
+        "title": "Tenant Forge",
+        "width": 950,
+        "height": 650
       }
     ],
     "security": {
