@@ -1,72 +1,235 @@
-import { useRef, useEffect } from "react";
+import { useEffect, useState } from "react";
+import CodeMirror from "@uiw/react-codemirror";
+import { EditorView } from "@codemirror/view";
+import { Extension } from "@codemirror/state";
+import { StreamLanguage, HighlightStyle, syntaxHighlighting } from "@codemirror/language";
+import { tags as t } from "@lezer/highlight";
 
 interface EnvEditorProps {
     value: string;
     onChange: (value: string) => void;
 }
 
+// Definir el parser para archivos .env
+const envParser = StreamLanguage.define({
+    name: "env",
+    token: (stream) => {
+        // Comentarios (líneas que empiezan con #)
+        if (stream.match(/^#.*/)) {
+            return "comment";
+        }
+
+        // Saltos de línea
+        if (stream.eol()) {
+            stream.next();
+            return null;
+        }
+
+        // Espacios
+        if (stream.eatWhile(/^\s/)) {
+            return null;
+        }
+
+        // Clave (texto antes del =, puede tener letras, números, guiones bajos)
+        if (stream.match(/^[A-Z_][A-Z0-9_]*/i)) {
+            return "variableName";
+        }
+
+        // Operador =
+        if (stream.match(/^=/)) {
+            return "operator";
+        }
+
+        // Strings entre comillas simples
+        if (stream.match(/^'[^']*'/)) {
+            return "string";
+        }
+
+        // Strings entre comillas dobles
+        if (stream.match(/^"[^"]*"/)) {
+            return "string";
+        }
+
+        // Números
+        if (stream.match(/^\d+/)) {
+            return "number";
+        }
+
+        // Cualquier otro carácter (valores sin comillas)
+        stream.next();
+        return "string";
+    },
+});
+
+// Función para obtener el estilo de resaltado según el tema
+const getEnvHighlightStyle = (isDark: boolean): HighlightStyle => {
+    if (isDark) {
+        // Tema oscuro - colores brillantes
+        return HighlightStyle.define([
+            {
+                tag: t.variableName,
+                color: "#7dd3fc", // Azul claro para claves
+                fontWeight: "500",
+            },
+            {
+                tag: t.string,
+                color: "#86efac", // Verde para valores/strings
+            },
+            {
+                tag: t.comment,
+                color: "#9ca3af", // Gris para comentarios
+                fontStyle: "italic",
+            },
+            {
+                tag: t.operator,
+                color: "#ffffff", // Blanco para el =
+            },
+            {
+                tag: t.number,
+                color: "#c084fc", // Púrpura para números
+            },
+        ]);
+    } else {
+        // Tema claro - colores oscuros con buen contraste
+        return HighlightStyle.define([
+            {
+                tag: t.variableName,
+                color: "#0284c7", // Azul oscuro para claves
+                fontWeight: "500",
+            },
+            {
+                tag: t.string,
+                color: "#16a34a", // Verde oscuro para valores/strings
+            },
+            {
+                tag: t.comment,
+                color: "#6b7280", // Gris oscuro para comentarios
+                fontStyle: "italic",
+            },
+            {
+                tag: t.operator,
+                color: "#1f2937", // Gris muy oscuro para el =
+            },
+            {
+                tag: t.number,
+                color: "#9333ea", // Púrpura oscuro para números
+            },
+        ]);
+    }
+};
+
+// Extensión de tema personalizado para .env que se adapta al tema de la app
+const envTheme = EditorView.theme({
+    "&": {
+        fontSize: "14px",
+        fontFamily: "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace",
+        height: "100%",
+    },
+    ".cm-content": {
+        padding: "16px",
+        minHeight: "100%",
+        color: "var(--foreground)",
+        backgroundColor: "transparent !important",
+    },
+    ".cm-editor": {
+        height: "100%",
+        backgroundColor: "transparent !important",
+    },
+    ".cm-scroller": {
+        overflow: "auto",
+        backgroundColor: "transparent !important",
+    },
+    ".cm-focused": {
+        outline: "none",
+    },
+    ".cm-editor.cm-focused": {
+        outline: "none",
+    },
+    ".cm-placeholder": {
+        color: "var(--muted-foreground)",
+    },
+    ".cm-selectionBackground": {
+        backgroundColor: "var(--accent)",
+    },
+    ".cm-cursor": {
+        borderLeftColor: "var(--foreground)",
+    },
+    ".cm-gutters": {
+        backgroundColor: "transparent !important",
+        border: "none",
+    },
+    ".cm-line": {
+        color: "var(--foreground)",
+    },
+});
+
 export default function EnvEditor({ value, onChange }: EnvEditorProps) {
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const highlightRef = useRef<HTMLDivElement>(null);
+    const [isDark, setIsDark] = useState(false);
 
     useEffect(() => {
-        if (!textareaRef.current || !highlightRef.current) return;
-
-        const textarea = textareaRef.current;
-        const highlight = highlightRef.current;
-
-        // Sincronizar scroll
-        const syncScroll = () => {
-            highlight.scrollTop = textarea.scrollTop;
-            highlight.scrollLeft = textarea.scrollLeft;
+        // Detectar tema actual
+        const checkTheme = () => {
+            setIsDark(document.documentElement.classList.contains("dark"));
         };
 
-        textarea.addEventListener("scroll", syncScroll);
-        return () => textarea.removeEventListener("scroll", syncScroll);
+        // Verificar al montar
+        checkTheme();
+
+        // Observar cambios en el tema
+        const observer = new MutationObserver(checkTheme);
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["class"],
+        });
+
+        // También escuchar cambios en la preferencia del sistema
+        const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+        const handleChange = () => checkTheme();
+        mediaQuery.addEventListener("change", handleChange);
+
+        return () => {
+            observer.disconnect();
+            mediaQuery.removeEventListener("change", handleChange);
+        };
     }, []);
 
-    // Función para resaltar el texto antes del "="
-    const highlightEnv = (text: string) => {
-        const lines = text.split("\n");
-        return lines
-            .map((line) => {
-                // Si la línea tiene un "=" y no es un comentario
-                if (line.includes("=") && !line.trim().startsWith("#")) {
-                    const [key, ...rest] = line.split("=");
-                    const value = rest.join("=");
-                    return `<span class="text-green-600 dark:text-green-400 font-medium">${escapeHtml(key)}</span>=${escapeHtml(value)}`;
-                }
-                return escapeHtml(line);
-            })
-            .join("\n");
-    };
-
-    const escapeHtml = (text: string) => {
-        const div = document.createElement("div");
-        div.textContent = text;
-        return div.innerHTML;
-    };
+    // Crear extensiones dinámicamente según el tema
+    const envExtensions: Extension[] = [
+        envParser,
+        syntaxHighlighting(getEnvHighlightStyle(isDark)),
+        envTheme,
+        EditorView.lineWrapping,
+    ];
 
     return (
-        <div className="relative h-full w-full">
-            {/* Textarea transparente */}
-            <textarea
-                ref={textareaRef}
+        <div className="h-full w-full relative">
+            <CodeMirror
                 value={value}
-                onChange={(e) => onChange(e.target.value)}
-                className="absolute inset-0 w-full h-full resize-none bg-transparent text-foreground px-4 py-3 font-mono text-sm leading-relaxed caret-foreground z-10 border-0 outline-none"
-                placeholder="DATABASE_URL=postgresql://user:password@localhost:5432/dbname&#10;API_KEY=your_api_key_here&#10;SECRET_KEY=your_secret_key"
-                spellCheck={false}
-            />
-            {/* Overlay de resaltado */}
-            <div
-                ref={highlightRef}
-                className="absolute inset-0 w-full h-full px-4 py-3 font-mono text-sm leading-relaxed pointer-events-none overflow-auto whitespace-pre-wrap wrap-break-word"
-                dangerouslySetInnerHTML={{
-                    __html: highlightEnv(value || ""),
+                onChange={onChange}
+                extensions={envExtensions}
+                basicSetup={{
+                    lineNumbers: false,
+                    foldGutter: false,
+                    dropCursor: false,
+                    allowMultipleSelections: false,
+                    indentOnInput: false,
+                    bracketMatching: false,
+                    closeBrackets: false,
+                    autocompletion: false,
+                    highlightSelectionMatches: false,
                 }}
+                placeholder="DATABASE_URL=postgresql://user:password@localhost:5432/dbname&#10;API_KEY=your_api_key_here&#10;SECRET_KEY=your_secret_key"
             />
+            <style>{`
+                .cm-editor,
+                .cm-scroller,
+                .cm-content {
+                    background-color: transparent !important;
+                }
+                .cm-editor .cm-content {
+                    color: var(--foreground) !important;
+                }
+            `}</style>
         </div>
     );
 }
-
