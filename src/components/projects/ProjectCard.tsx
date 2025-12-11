@@ -2,12 +2,12 @@ import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ProjectData } from "@/hooks/useProject";
 
-interface ProjectItemProps {
+interface ProjectCardProps {
     project: ProjectData;
     onClick: (id: number) => void;
 }
 
-export default function ProjectItem({ project, onClick }: ProjectItemProps) {
+export default function ProjectCard({ project, onClick }: ProjectCardProps) {
     const [isLongHover, setIsLongHover] = useState(false);
     const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
 

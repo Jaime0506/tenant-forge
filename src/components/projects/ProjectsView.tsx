@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import CreateProject from "./CreateProject";
-import ListProject from "./ListProject";
+import ProjectCreateForm from "./ProjectCreateForm";
+import ProjectList from "./ProjectList";
 import { ProjectData } from "@/hooks/useProject";
 import { useProjectService } from "@/hooks/useProjectService";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
-export default function ProjectView() {
+export default function ProjectsView() {
     const { getProjects } = useProjectService();
     const [projects, setProjects] = useState<ProjectData[]>([]);
     const [accordionValue, setAccordionValue] = useState<string>("");
@@ -59,13 +59,13 @@ export default function ProjectView() {
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="px-0 pb-6">
-                        <CreateProject onProjectCreated={refreshProjects} />
+                        <ProjectCreateForm onProjectCreated={refreshProjects} />
                     </AccordionContent>
                 </AccordionItem>
             </Accordion>
 
             <section className="flex flex-col gap-6 pt-6 border-t border-border">
-                <ListProject projects={projects} />
+                <ProjectList projects={projects} />
             </section>
         </main>
     )

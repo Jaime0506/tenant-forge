@@ -5,11 +5,11 @@ import { ArrowLeft } from "lucide-react";
 import EnvEditor from "./EnvEditor";
 import SqlEditor from "./SqlEditor";
 
-interface ProjectSelectedProps {
+interface ProjectEditorProps {
     id: number;
 }
 
-export default function ProjectSelected({ id }: ProjectSelectedProps) {
+export default function ProjectEditor({ id }: ProjectEditorProps) {
     const navigate = useNavigate();
     const [envContent, setEnvContent] = useState("");
     const [sqlContent, setSqlContent] = useState("");

@@ -2,7 +2,7 @@ import { useParams } from "react-router";
 import { AnimatedBackground } from "@/components/slide-presentation/AnimatedBackground";
 import ProjectEditor from "@/components/project-editor/ProjectEditor";
 
-export default function ProjectPage() {
+export default function ProjectEditorPage() {
     const { id } = useParams();
 
     return (

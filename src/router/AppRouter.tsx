@@ -1,9 +1,9 @@
 import { Routes, Route, useNavigate } from "react-router";
 import PresentacionPage from "@/pages/PresentacionPage";
-import MainPage from "@/pages/MainPage";
+import ProjectsPage from "@/pages/ProjectsPage";
 import useStoreManagement from "@/hooks/useStoreManagement";
 import { useEffect } from "react";
-import ProjectPage from "@/pages/ProjectPage";
+import ProjectEditorPage from "@/pages/ProjectEditorPage";
 
 export default function AppRouter() {
   const navigate = useNavigate();
@@ -23,8 +23,8 @@ export default function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<PresentacionPage />} />
-      <Route path="/main" element={<MainPage />} />
-      <Route path="/project/:id" element={<ProjectPage />} />
+      <Route path="/main" element={<ProjectsPage />} />
+      <Route path="/project/:id" element={<ProjectEditorPage />} />
     </Routes>
   )
 }

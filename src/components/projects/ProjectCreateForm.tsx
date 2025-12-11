@@ -4,11 +4,11 @@ import { useProjectService } from "@/hooks/useProjectService";
 import { useState } from "react";
 import ButtonCustom from "../ui-custom/ButtonCustom";
 
-interface CreateProjectProps {
+interface ProjectCreateFormProps {
     onProjectCreated?: () => void;
 }
 
-export default function CreateProject({ onProjectCreated }: CreateProjectProps) {
+export default function ProjectCreateForm({ onProjectCreated }: ProjectCreateFormProps) {
     const [isLoading, setIsLoading] = useState(false);
     const { createProject } = useProjectService()
 

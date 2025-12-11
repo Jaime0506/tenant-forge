@@ -6,7 +6,7 @@ import { AnimatedBackground } from "@/components/slide-presentation/AnimatedBack
 // import { useNavigate } from "react-router";
 
 
-export default function MainPage() {
+export default function ProjectsPage() {
   // const navigate = useNavigate();
   // const { methods: { setIsFirstTimeInStore } } = useStoreManagement();
 

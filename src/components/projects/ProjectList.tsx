@@ -1,12 +1,12 @@
 import { ProjectData } from "@/hooks/useProject";
-import ProjectItem from "./ProjectItem";
+import ProjectCard from "./ProjectCard";
 import { useNavigate } from "react-router";
 
-interface ListProjectProps {
+interface ProjectListProps {
     projects: ProjectData[];
 }
 
-export default function ListProject({ projects }: ListProjectProps) {
+export default function ProjectList({ projects }: ProjectListProps) {
     const navigate = useNavigate();
 
     const handleClick = (id: number) => {
@@ -35,7 +35,7 @@ export default function ListProject({ projects }: ListProjectProps) {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {projects.map((project) => (
-                        <ProjectItem key={project.id} project={project} onClick={handleClick} />
+                        <ProjectCard key={project.id} project={project} onClick={handleClick} />
                     ))}
                 </div>
             )}
