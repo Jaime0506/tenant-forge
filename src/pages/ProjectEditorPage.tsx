@@ -6,7 +6,7 @@ export default function ProjectEditorPage() {
     const { id } = useParams();
 
     return (
-        <main className="flex w-full h-screen bg-white dark:bg-slate-900 p-6">
+        <main className="flex w-full h-screen bg-white dark:bg-slate-900">
             <AnimatedBackground />
             <ProjectEditor id={Number(id)} />
         </main>

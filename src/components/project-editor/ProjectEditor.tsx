@@ -6,6 +6,7 @@ import EnvEditor from "./EnvEditor";
 import SqlEditor from "./SqlEditor";
 import useStoreManagement from "@/hooks/useStoreManagement";
 import EnvEditorWarningIcon from "./EnvEditorWarningIcon";
+import { DatabaseConnection } from "./envParser";
 
 interface ProjectEditorProps {
     id: number;
@@ -16,8 +17,14 @@ export default function ProjectEditor({ id }: ProjectEditorProps) {
     const [envContent, setEnvContent] = useState("");
     const [sqlContent, setSqlContent] = useState("");
     const [shouldAnimateWarning, setShouldAnimateWarning] = useState(false);
+    const [connections, setConnections] = useState<DatabaseConnection[]>([]);
 
     const { isEnvEditorWarningShown } = useStoreManagement();
+
+    const handleEnvConfirm = (detectedConnections: DatabaseConnection[]) => {
+        setConnections(detectedConnections);
+        console.log("Conexiones detectadas:", detectedConnections);
+    };
 
     useEffect(() => {
         // Cuando isEnvEditorWarningShown se carga y es true, activar la animación
@@ -57,7 +64,11 @@ export default function ProjectEditor({ id }: ProjectEditorProps) {
                         )}
                     </div>
                     <div className="flex-1 min-h-0 relative">
-                        <EnvEditor value={envContent} onChange={setEnvContent} />
+                        <EnvEditor
+                            value={envContent}
+                            onChange={setEnvContent}
+                            onConfirm={handleEnvConfirm}
+                        />
                     </div>
                 </div>
 
@@ -69,7 +80,11 @@ export default function ProjectEditor({ id }: ProjectEditorProps) {
                         </h2>
                     </div>
                     <div className="flex-1 min-h-0 relative">
-                        <SqlEditor value={sqlContent} onChange={setSqlContent} />
+                        <SqlEditor
+                            value={sqlContent}
+                            onChange={setSqlContent}
+                            connections={connections}
+                        />
                     </div>
                 </div>
             </div>
