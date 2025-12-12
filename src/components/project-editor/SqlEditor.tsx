@@ -97,7 +97,6 @@ const getSqlTheme = (isDark: boolean) => EditorView.theme({
     },
     ".cm-content": {
         padding: "16px",
-        minHeight: "100%",
         color: "var(--foreground)",
         backgroundColor: "transparent !important",
     },
@@ -276,9 +275,9 @@ export default function SqlEditor({ value, onChange }: SqlEditorProps) {
     };
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full min-h-0">
             {/* Barra de herramientas */}
-            <div className="flex items-center justify-between gap-2 p-2 border-b border-border bg-muted/30">
+            <div className="flex items-center justify-between gap-2 p-2 border-b border-border bg-muted/30 shrink-0">
                 <Button
                     variant="outline"
                     size="sm"
@@ -298,34 +297,41 @@ export default function SqlEditor({ value, onChange }: SqlEditorProps) {
             </div>
 
             {/* Editor */}
-            <div className="relative flex-1 overflow-hidden">
-                <CodeMirror
-                    value={value}
-                    onChange={onChange}
-                    extensions={sqlExtensions}
-                    basicSetup={{
-                        lineNumbers: false,
-                        foldGutter: false,
-                        dropCursor: false,
-                        allowMultipleSelections: false,
-                        indentOnInput: true,
-                        bracketMatching: true,
-                        closeBrackets: true,
-                        autocompletion: true,
-                        highlightSelectionMatches: false,
-                    }}
-                    placeholder="SELECT * FROM users WHERE id = 1;"
-                />
-                <style>{`
-                    .cm-editor,
-                    .cm-scroller,
-                    .cm-content {
-                        background-color: transparent !important;
-                    }
-                    .cm-editor .cm-content {
-                        color: var(--foreground) !important;
-                    }
-                `}</style>
+            <div className="relative flex-1 min-h-0">
+                <div className="absolute inset-0">
+                    <CodeMirror
+                        value={value}
+                        onChange={onChange}
+                        height="100%"
+                        style={{ height: "100%" }}
+                        extensions={sqlExtensions}
+                        basicSetup={{
+                            lineNumbers: false,
+                            foldGutter: false,
+                            dropCursor: false,
+                            allowMultipleSelections: false,
+                            indentOnInput: true,
+                            bracketMatching: true,
+                            closeBrackets: true,
+                            autocompletion: true,
+                            highlightSelectionMatches: false,
+                        }}
+                        placeholder="SELECT * FROM users WHERE id = 1;"
+                    />
+                    <style>{`
+                        .cm-editor,
+                        .cm-content {
+                            background-color: transparent !important;
+                        }
+                        .cm-scroller {
+                            background-color: transparent !important;
+                            overflow: auto !important;
+                        }
+                        .cm-editor .cm-content {
+                            color: var(--foreground) !important;
+                        }
+                    `}</style>
+                </div>
             </div>
         </div>
     );

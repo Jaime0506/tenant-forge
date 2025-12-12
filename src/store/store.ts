@@ -10,6 +10,7 @@ const loadStore = async () => {
         defaults: {
             theme: "dark",
             isFirstTime: true,
+            isEnvEditorWarningShown: true,
         },
     });
 

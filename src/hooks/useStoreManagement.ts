@@ -6,6 +6,20 @@ export default function useStoreManagement() {
     const [isFirstTime, setIsFirstTime] = useState<boolean | undefined>(
         undefined
     );
+    const [isEnvEditorWarningShown, setIsEnvEditorWarningShown] = useState<
+        boolean | undefined
+    >(undefined);
+
+    const getIsEnvEditorWarningShown = async () => {
+        try {
+            const isEnvEditorWarningShown = await storeManagement.get<boolean>(
+                "isEnvEditorWarningShown"
+            );
+            setIsEnvEditorWarningShown(isEnvEditorWarningShown ?? true);
+        } catch (error) {
+            console.error("Error getting isEnvEditorWarningShown:", error);
+        }
+    };
 
     const getTheme = async () => {
         try {
@@ -35,6 +49,7 @@ export default function useStoreManagement() {
             console.error("Error setting theme:", error);
         }
     };
+
     const setIsFirstTimeInStore = async (isFirstTime: boolean) => {
         try {
             await storeManagement.set("isFirstTime", isFirstTime);
@@ -45,9 +60,25 @@ export default function useStoreManagement() {
         }
     };
 
+    const setIsEnvEditorWarningShownInStore = async (
+        isEnvEditorWarningShown: boolean
+    ) => {
+        try {
+            await storeManagement.set(
+                "isEnvEditorWarningShown",
+                isEnvEditorWarningShown
+            );
+            setIsEnvEditorWarningShown(isEnvEditorWarningShown);
+        } catch (error) {
+            console.error("Error setting isEnvEditorWarningShown:", error);
+            throw error;
+        }
+    };
+
     const getInitialData = async () => {
         await getTheme();
         await getIsFirstTime();
+        await getIsEnvEditorWarningShown();
     };
 
     useEffect(() => {
@@ -57,9 +88,11 @@ export default function useStoreManagement() {
     return {
         theme,
         isFirstTime,
+        isEnvEditorWarningShown,
         methods: {
             setThemeInStore,
             setIsFirstTimeInStore,
+            setIsEnvEditorWarningShownInStore,
         },
     };
 }

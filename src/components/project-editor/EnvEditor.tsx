@@ -127,7 +127,6 @@ const getEnvTheme = (isDark: boolean) => EditorView.theme({
     },
     ".cm-content": {
         padding: "16px",
-        minHeight: "100%",
         color: "var(--foreground)",
         backgroundColor: "transparent !important",
     },
@@ -136,8 +135,9 @@ const getEnvTheme = (isDark: boolean) => EditorView.theme({
         backgroundColor: "transparent !important",
     },
     ".cm-scroller": {
-        overflow: "auto",
+        overflow: "auto !important",
         backgroundColor: "transparent !important",
+        height: "100%",
     },
     ".cm-focused": {
         outline: "none",
@@ -208,10 +208,12 @@ export default function EnvEditor({ value, onChange }: EnvEditorProps) {
     ];
 
     return (
-        <div className="h-full w-full relative">
+        <div className="absolute inset-0">
             <CodeMirror
                 value={value}
                 onChange={onChange}
+                height="100%"
+                style={{ height: "100%" }}
                 extensions={envExtensions}
                 basicSetup={{
                     lineNumbers: false,
@@ -228,9 +230,12 @@ export default function EnvEditor({ value, onChange }: EnvEditorProps) {
             />
             <style>{`
                 .cm-editor,
-                .cm-scroller,
                 .cm-content {
                     background-color: transparent !important;
+                }
+                .cm-scroller {
+                    background-color: transparent !important;
+                    overflow: auto !important;
                 }
                 .cm-editor .cm-content {
                     color: var(--foreground) !important;
