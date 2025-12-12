@@ -16,3 +16,7 @@ export const createProjectService = (data: ProjectData) => {
 export const getProjectsService = () => {
     return invoke("get_projects");
 };
+
+export const getProjectByIdService = (id: number) => {
+    return invoke("get_project_by_id", { id });
+};

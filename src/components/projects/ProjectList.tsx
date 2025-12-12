@@ -9,9 +9,17 @@ interface ProjectListProps {
 export default function ProjectList({ projects }: ProjectListProps) {
     const navigate = useNavigate();
 
-    const handleClick = (id: number) => {
-        navigate(`/project/${id}`);
+    // Con el useLocation podemos acceder a los datos pasados en el navigate
+    const handleClick = (id: number, extraData?: Partial<ProjectData>) => {
+        navigate(`/project/${id}`, {
+            state: {
+                ...extraData
+            }
+        });
     };
+
+    // Ejemplo de uso: 
+    // handleClick(project.id, { name: project.name, tags: project.tags });
 
     return (
         <div className="flex w-full flex-col gap-6">

@@ -1,9 +1,12 @@
-import { useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
 import { AnimatedBackground } from "@/components/slide-presentation/AnimatedBackground";
 import ProjectEditor from "@/components/project-editor/ProjectEditor";
 
 export default function ProjectEditorPage() {
     const { id } = useParams();
+    const { state } = useLocation();
+
+    console.log("state", state);
 
     return (
         <main className="flex w-full h-screen bg-white dark:bg-slate-900">
