@@ -23,6 +23,40 @@ const POSTGRES_FIELDS = [
 type PostgresField = (typeof POSTGRES_FIELDS)[number];
 
 /**
+ * Limpia todas las comillas (simples y dobles, normales y Unicode) del inicio y final de un string
+ * Itera hasta que no haya más cambios para manejar comillas anidadas
+ */
+function cleanQuotes(value: string): string {
+    if (!value) return value;
+
+    let cleaned = value.trim();
+    let iterations = 0;
+    const maxIterations = 10; // Límite de seguridad
+
+    // Iterar hasta que no haya más cambios
+    while (iterations < maxIterations) {
+        const before = cleaned;
+
+        // Eliminar todas las variantes de comillas simples del inicio y final
+        // Incluye: ' (normal), ' (left single U+2018), ' (right single U+2019)
+        cleaned = cleaned.replace(/^['''']+/g, "").replace(/['''']+$/g, "");
+
+        // Eliminar todas las variantes de comillas dobles del inicio y final
+        // Incluye: " (normal), " (left double U+201C), " (right double U+201D)
+        cleaned = cleaned.replace(/^[""""]+/g, "").replace(/[""""]+$/g, "");
+
+        // Si no hubo cambios, salir
+        if (before === cleaned) {
+            break;
+        }
+
+        iterations++;
+    }
+
+    return cleaned.trim();
+}
+
+/**
  * Parsea el contenido de un archivo .env y agrupa las conexiones de base de datos
  * El patrón esperado es: POSTGRES_{FIELD}_{CONNECTION_ID} = 'valor'
  */
@@ -48,8 +82,8 @@ export function parseEnvConnections(envContent: string): DatabaseConnection[] {
             const [, field, connectionId, rawValue] = match;
             const upperField = field.toUpperCase() as PostgresField;
 
-            // Limpiar el valor (quitar comillas)
-            const value = rawValue.trim().replace(/^['"]|['"]$/g, "");
+            // Limpiar el valor usando la función helper
+            const value = cleanQuotes(rawValue);
 
             // Obtener o crear la conexión
             if (!connections.has(connectionId)) {
@@ -129,10 +163,13 @@ export function getUniqueConnections(envContent: string): DatabaseConnection[] {
             if (match) {
                 const [, field, connectionId, rawValue] = match;
                 const upperField = field.toUpperCase();
-                const value = rawValue.trim().replace(/^['"]|['"]$/g, "");
+
+                // Limpiar comillas usando la función helper
+                const value = cleanQuotes(rawValue);
 
                 if (!baseId) {
-                    baseId = connectionId;
+                    // Limpiar también el connectionId
+                    baseId = cleanQuotes(connectionId);
                 }
 
                 switch (upperField) {
@@ -162,10 +199,11 @@ export function getUniqueConnections(envContent: string): DatabaseConnection[] {
         }
 
         if (baseId) {
-            // Crear un ID único basado en el ID base + DB para diferenciar conexiones
-            connection.id = connection.db
-                ? `${baseId}_${connection.db}`
-                : `${baseId}_${blockIndex + 1}`;
+            // Limpiar el DB también antes de usarlo en el ID
+            const cleanDb = connection.db ? cleanQuotes(connection.db) : "";
+
+            // Crear un ID único basado solo en el DB para simplificar
+            connection.id = cleanDb || `${baseId}_${blockIndex + 1}`;
             allConnections.push(connection);
         }
     }

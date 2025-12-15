@@ -7,6 +7,7 @@ import SqlEditor from "./SqlEditor";
 import useStoreManagement from "@/hooks/useStoreManagement";
 import EnvEditorWarningIcon from "./EnvEditorWarningIcon";
 import { DatabaseConnection } from "./envParser";
+import { invoke } from "@tauri-apps/api/core";
 
 interface ProjectEditorProps {
     id: number;
@@ -18,12 +19,110 @@ export default function ProjectEditor({ id }: ProjectEditorProps) {
     const [sqlContent, setSqlContent] = useState("");
     const [shouldAnimateWarning, setShouldAnimateWarning] = useState(false);
     const [connections, setConnections] = useState<DatabaseConnection[]>([]);
+    const [isExecutingSql, setIsExecutingSql] = useState(false);
+    const [executionResults, setExecutionResults] = useState<
+        Array<{
+            connection_id: string;
+            success: boolean;
+            message: string;
+        }> | null
+    >(null);
 
     const { isEnvEditorWarningShown } = useStoreManagement();
 
     const handleEnvConfirm = (detectedConnections: DatabaseConnection[]) => {
         setConnections(detectedConnections);
         console.log("Conexiones detectadas:", detectedConnections);
+    };
+
+    /**
+     * Limpia todas las comillas (simples y dobles, normales y Unicode) de un string
+     * Maneja casos con comillas anidadas o múltiples capas
+     */
+    const cleanQuotes = (value: string | undefined): string | undefined => {
+        if (!value) return value;
+
+        let cleaned = value.trim();
+        let iterations = 0;
+        const maxIterations = 10; // Límite de seguridad
+
+        // Iterar hasta que no haya más cambios (elimina comillas anidadas)
+        while (iterations < maxIterations) {
+            const before = cleaned;
+
+            // Eliminar todas las variantes de comillas simples del inicio y final
+            // Incluye: ' (normal), ' (left single), ' (right single)
+            cleaned = cleaned.replace(/^['''']+/g, "").replace(/['''']+$/g, "");
+
+            // Eliminar todas las variantes de comillas dobles del inicio y final
+            // Incluye: " (normal), " (left double), " (right double)
+            cleaned = cleaned.replace(/^[""""]+/g, "").replace(/[""""]+$/g, "");
+
+            // Si no hubo cambios, salir
+            if (before === cleaned) {
+                break;
+            }
+
+            iterations++;
+        }
+
+        return cleaned.trim();
+    };
+
+    const handleExecuteSql = async (selectedConnections: DatabaseConnection[]) => {
+        if (selectedConnections.length === 0) {
+            console.warn("No hay conexiones seleccionadas");
+            return;
+        }
+
+        const fixedConnections = selectedConnections.map((connection) => {
+            const fixedConnection: DatabaseConnection = {
+                id: cleanQuotes(connection.id) || connection.id,
+                type: cleanQuotes(connection.type),
+                host: cleanQuotes(connection.host),
+                db: cleanQuotes(connection.db),
+                schema: cleanQuotes(connection.schema),
+                user: cleanQuotes(connection.user),
+                password: cleanQuotes(connection.password),
+                port: connection.port,
+            };
+
+            return fixedConnection;
+        });
+
+        try {
+            setIsExecutingSql(true);
+            setExecutionResults(null); // Limpiar resultados anteriores
+
+            const results = await invoke<Array<{
+                connection_id: string;
+                success: boolean;
+                message: string;
+            }>>("execute_sql", { sql: sqlContent, connections: fixedConnections });
+
+            // Guardar resultados para mostrar en el componente
+            setExecutionResults(results);
+
+            results.forEach((result) => {
+                const status = result.success ? "✅" : "❌";
+                console.log(`${status} [${result.connection_id}]: ${result.message}`);
+            });
+
+            const successful = results.filter((r) => r.success).length;
+            const failed = results.length - successful;
+            console.log(`\nResumen: ${successful} exitosas, ${failed} fallidas de ${results.length} totales`);
+        } catch (error) {
+            console.error("Error ejecutando SQL:", error);
+            setExecutionResults([
+                {
+                    connection_id: "Error",
+                    success: false,
+                    message: `Error al ejecutar: ${error}`,
+                },
+            ]);
+        } finally {
+            setIsExecutingSql(false);
+        }
     };
 
     useEffect(() => {
@@ -84,6 +183,9 @@ export default function ProjectEditor({ id }: ProjectEditorProps) {
                             value={sqlContent}
                             onChange={setSqlContent}
                             connections={connections}
+                            onExecute={handleExecuteSql}
+                            isExecutingSql={isExecutingSql}
+                            executionResults={executionResults}
                         />
                     </div>
                 </div>

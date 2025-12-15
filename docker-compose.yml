@@ -1,0 +1,34 @@
+services:
+  postgres-main:
+    image: postgres:16-alpine
+    container_name: tenant-forge-db-main
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: tenant_forge_1
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_main_data:/var/lib/postgresql/data
+      - ./docker-init/main:/docker-entrypoint-initdb.d
+    command: postgres -c max_connections=200
+
+  postgres-secondary:
+    image: postgres:16-alpine
+    container_name: tenant-forge-db-secondary
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: tenant_forge_3
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_secondary_data:/var/lib/postgresql/data
+      - ./docker-init/secondary:/docker-entrypoint-initdb.d
+    command: postgres -c max_connections=200
+
+volumes:
+  postgres_main_data:
+  postgres_secondary_data:

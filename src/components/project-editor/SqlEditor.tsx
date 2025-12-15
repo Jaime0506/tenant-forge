@@ -10,18 +10,32 @@ import { DatabaseConnection } from "./envParser";
 import { getSqlHighlightStyle, getSqlTheme } from "./sqlEditorTheme";
 import { formatSql } from "./sqlUtils";
 import ConnectionsPanel from "./ConnectionsPanel";
+import SqlExecutionResults from "./SqlExecutionResults";
 import { useThemeDetector } from "@/hooks/useThemeDetector";
+import ButtonCustom from "../ui-custom/ButtonCustom";
+
+interface ExecutionResult {
+    connection_id: string;
+    success: boolean;
+    message: string;
+}
 
 interface SqlEditorProps {
     value: string;
     onChange: (value: string) => void;
     connections?: DatabaseConnection[];
+    onExecute: (selectedConnections: DatabaseConnection[]) => void;
+    isExecutingSql: boolean;
+    executionResults?: ExecutionResult[] | null;
 }
 
 export default function SqlEditor({
     value,
     onChange,
     connections = [],
+    onExecute,
+    isExecutingSql,
+    executionResults = null,
 }: SqlEditorProps) {
     const isDark = useThemeDetector();
     const [selectedConnections, setSelectedConnections] = useState<Set<string>>(
@@ -72,11 +86,11 @@ export default function SqlEditor({
     };
 
     const handleExecute = () => {
-        console.log("Ejecutando SQL:", value);
-        console.log(
-            "Conexiones seleccionadas:",
-            Array.from(selectedConnections)
+        // Filtrar solo las conexiones seleccionadas
+        const selected = connections.filter((conn) =>
+            selectedConnections.has(conn.id)
         );
+        onExecute(selected);
     };
 
     return (
@@ -100,10 +114,10 @@ export default function SqlEditor({
                 >
                     Formatear SQL
                 </Button>
-                <Button size="sm" onClick={handleExecute} className="gap-2">
+                <ButtonCustom isLoading={isExecutingSql} onClick={handleExecute} className="gap-2">
                     <Play className="size-3" />
                     Ejecutar
-                </Button>
+                </ButtonCustom>
             </div>
 
             {/* Editor */}
@@ -143,6 +157,9 @@ export default function SqlEditor({
                     `}</style>
                 </div>
             </div>
+
+            {/* Resultados de ejecución */}
+            <SqlExecutionResults results={executionResults} />
         </div>
     );
 }
