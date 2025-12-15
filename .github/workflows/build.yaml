@@ -1,0 +1,60 @@
+name: Tauri Build (Windows + macOS ARM)
+
+on:
+    push:
+        branches: ["release"]
+    pull_request:
+
+jobs:
+    build:
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [windows-latest, macos-latest]
+
+        runs-on: ${{ matrix.os }}
+
+        steps:
+            # 1️⃣ Código fuente
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            # 2️⃣ Node.js (frontend)
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: npm
+
+            - name: Install dependencies
+              run: npm ci
+
+            # 3️⃣ Rust (Tauri backend)
+            - name: Setup Rust
+              uses: dtolnay/rust-toolchain@stable
+
+            - name: Rust cache
+              uses: swatinem/rust-cache@v2
+
+            # 4️⃣ Dependencias del sistema
+            - name: macOS system dependencies
+              if: runner.os == 'macOS'
+              run: |
+                  brew update
+                  brew install openssl
+
+            - name: Windows system dependencies
+              if: runner.os == 'Windows'
+              run: |
+                  choco install llvm -y
+
+            # 5️⃣ Build Tauri
+            - name: Build Tauri app
+              run: npm run tauri build
+
+            # 6️⃣ Subir binarios generados
+            - name: Upload artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: tauri-${{ runner.os }}
+                  path: src-tauri/target/release/bundle/**
