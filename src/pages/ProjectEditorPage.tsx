@@ -6,12 +6,10 @@ export default function ProjectEditorPage() {
     const { id } = useParams();
     const { state } = useLocation();
 
-    console.log("state", state);
-
     return (
         <main className="flex w-full h-screen bg-white dark:bg-slate-900">
             <AnimatedBackground />
-            <ProjectEditor id={Number(id)} />
+            <ProjectEditor id={Number(id)} project={state} />
         </main>
     );
 }

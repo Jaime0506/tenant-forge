@@ -12,6 +12,7 @@ export interface ProjectData {
     name: string;
     description: string;
     tags: string[];
+    connections?: any;
 }
 
 export type ProjectSubmitCallback<T = void> = (

@@ -10,7 +10,8 @@ export default function ProjectList({ projects }: ProjectListProps) {
     const navigate = useNavigate();
 
     // Con el useLocation podemos acceder a los datos pasados en el navigate
-    const handleClick = (id: number, extraData?: Partial<ProjectData>) => {
+    const handleClick = (id: number, extraData: ProjectData) => {
+        console.log("extraData", extraData);
         navigate(`/project/${id}`, {
             state: {
                 ...extraData
@@ -43,7 +44,7 @@ export default function ProjectList({ projects }: ProjectListProps) {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {projects.map((project) => (
-                        <ProjectCard key={project.id} project={project} onClick={handleClick} />
+                        <ProjectCard key={project.id} project={project} onClick={(id) => handleClick(id, project)} />
                     ))}
                 </div>
             )}

@@ -1,8 +1,10 @@
 import {
     createProjectService,
     getProjectsService,
+    saveProjectService,
 } from "@/services/project.service";
 import { ProjectData } from "./useProject";
+import { DatabaseConnection } from "@/components/project-editor/envParser";
 
 export const useProjectService = () => {
     const createProject = async (data: ProjectData) => {
@@ -18,8 +20,13 @@ export const useProjectService = () => {
         callback?.(projects);
     };
 
+    const saveProject = async (id: number, data: DatabaseConnection[]) => {
+        await saveProjectService(id, data);
+    };
+
     return {
         createProject,
         getProjects,
+        saveProject,
     };
 };

@@ -8,12 +8,14 @@ import useStoreManagement from "@/hooks/useStoreManagement";
 import EnvEditorWarningIcon from "./EnvEditorWarningIcon";
 import { DatabaseConnection } from "./envParser";
 import { invoke } from "@tauri-apps/api/core";
+import { ProjectData } from "@/hooks/useProject";
 
 interface ProjectEditorProps {
     id: number;
+    project: ProjectData;
 }
 
-export default function ProjectEditor({ id }: ProjectEditorProps) {
+export default function ProjectEditor({ id, project }: ProjectEditorProps) {
     const navigate = useNavigate();
     const [envContent, setEnvContent] = useState("");
     const [sqlContent, setSqlContent] = useState("");
@@ -32,7 +34,6 @@ export default function ProjectEditor({ id }: ProjectEditorProps) {
 
     const handleEnvConfirm = (detectedConnections: DatabaseConnection[]) => {
         setConnections(detectedConnections);
-        console.log("Conexiones detectadas:", detectedConnections);
     };
 
     /**
@@ -146,7 +147,7 @@ export default function ProjectEditor({ id }: ProjectEditorProps) {
                     Volver
                 </Button>
                 <h1 className="text-lg font-semibold text-foreground">
-                    Proyecto #{id}
+                    {project.name}
                 </h1>
             </div>
 
@@ -167,6 +168,7 @@ export default function ProjectEditor({ id }: ProjectEditorProps) {
                             value={envContent}
                             onChange={setEnvContent}
                             onConfirm={handleEnvConfirm}
+                            projectId={id}
                         />
                     </div>
                 </div>

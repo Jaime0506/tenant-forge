@@ -7,9 +7,9 @@ interface ButtonCustomProps extends React.ComponentProps<"button"> {
     isLoading?: boolean;
 }
 
-export default function ButtonCustom({ children, className, isLoading, ...props }: ButtonCustomProps) {
+export default function ButtonCustom({ children, className, isLoading, disabled, ...props }: ButtonCustomProps) {
     return (
-        <Button {...props} className={cn("hover:cursor-pointer", className)} disabled={isLoading}>
+        <Button {...props} className={cn("hover:cursor-pointer", className)} disabled={disabled || isLoading}>
             {isLoading ? <Loader2 className="animate-spin" /> : children}
         </Button>
     )
