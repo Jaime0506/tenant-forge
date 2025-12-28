@@ -11,7 +11,6 @@ export default function ProjectList({ projects }: ProjectListProps) {
 
     // Con el useLocation podemos acceder a los datos pasados en el navigate
     const handleClick = (id: number, extraData: ProjectData) => {
-        console.log("extraData", extraData);
         navigate(`/project/${id}`, {
             state: {
                 ...extraData

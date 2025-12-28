@@ -49,7 +49,7 @@ export default function ConnectionsPanel({
                     </button>
                 </div>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
                 {connections.map((conn) => (
                     <ConnectionChip
                         key={conn.id}
