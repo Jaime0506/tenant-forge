@@ -8,7 +8,11 @@ import useStoreManagement from "@/hooks/useStoreManagement";
 import EnvEditorWarningIcon from "./EnvEditorWarningIcon";
 import { ProjectData } from "@/hooks/useProject";
 import { useProjectConnections } from "@/hooks/useProjectConnections";
-import { DatabaseConnection, getUniqueConnections } from "./envParser";
+import {
+    DatabaseConnection,
+    getUniqueConnections,
+    serializeEnvConnections,
+} from "./envParser";
 
 interface ProjectEditorProps {
     id: number;
@@ -48,13 +52,37 @@ export default function ProjectEditor({ id, project }: ProjectEditorProps) {
     // Cargar connections guardadas en el proyecto al montar el componente
     useEffect(() => {
         if (project.connections && project.connections.trim() !== "") {
-            // Cargar el contenido de connections en el editor .env
-            setEnvContent(project.connections);
+            let connectionsToLoad: DatabaseConnection[] = [];
+            let displayContent = project.connections;
 
-            // Parsear y cargar las conexiones automáticamente
-            const parsedConnections = getUniqueConnections(project.connections);
-            if (parsedConnections.length > 0) {
-                handleEnvConfirm(parsedConnections);
+            // Intentar parsear como JSON si parece una lista
+            if (project.connections.trim().startsWith("[")) {
+                try {
+                    const parsed = JSON.parse(project.connections);
+                    if (Array.isArray(parsed)) {
+                        connectionsToLoad = parsed;
+                        displayContent = serializeEnvConnections(parsed);
+                    }
+                } catch (e) {
+                    // Si falla el parseo JSON, lo dejamos como está para intentar parsearlo como .env
+                    console.error(
+                        "Error parseando conexiones JSON, intentando como .env:",
+                        e
+                    );
+                }
+            }
+
+            // Si no se han cargado conexiones (porque no era JSON o falló), intentar parsear como .env
+            if (connectionsToLoad.length === 0) {
+                connectionsToLoad = getUniqueConnections(project.connections);
+            }
+
+            // Cargar el contenido (serializado si era JSON) en el editor .env
+            setEnvContent(displayContent);
+
+            // Cargar las conexiones automáticamente en el panel
+            if (connectionsToLoad.length > 0) {
+                handleEnvConfirm(connectionsToLoad);
             }
         }
     }, [project.connections, handleEnvConfirm]);
