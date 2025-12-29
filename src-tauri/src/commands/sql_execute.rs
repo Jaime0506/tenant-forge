@@ -59,7 +59,7 @@ async fn execute_on_connection(
     };
 
     // Conectar a la base de datos
-    let (client, connection) = match tokio_postgres::connect(&connection_string, NoTls).await {
+    let (mut client, connection) = match tokio_postgres::connect(&connection_string, NoTls).await {
         Ok((c, conn)) => (c, conn),
         Err(e) => {
             // Obtener detalles más específicos del error de conexión
@@ -108,34 +108,164 @@ async fn execute_on_connection(
 
     // Ejecutar el SQL
     println!("[{}] Ejecutando SQL...", connection_id);
-    match client.execute(sql, &[]).await {
-        Ok(rows_affected) => {
-            let success_msg = format!("SQL ejecutado exitosamente. Filas afectadas: {}", rows_affected);
-            println!("[{}] {}", connection_id, success_msg);
-            Ok(ExecutionResult {
-                connection_id: connection_id.clone(),
-                success: true,
-                message: success_msg,
-            })
+    
+    let sql_trimmed = sql.trim();
+    let sql_upper = sql_trimmed.to_uppercase();
+    
+    // Detectar tipos de statements que requieren batch_execute
+    // DDL (Data Definition Language)
+    let has_ddl = sql_upper.contains("CREATE ") 
+        || sql_upper.contains("ALTER ") 
+        || sql_upper.contains("DROP ")
+        || sql_upper.contains("TRUNCATE ")
+        || sql_upper.contains("COMMENT ON");
+    
+    // DCL (Data Control Language)
+    let has_dcl = sql_upper.contains("GRANT ") 
+        || sql_upper.contains("REVOKE ");
+    
+    // Funciones y procedimientos
+    let has_functions = sql_upper.contains("CREATE FUNCTION")
+        || sql_upper.contains("CREATE OR REPLACE FUNCTION")
+        || sql_upper.contains("CREATE PROCEDURE")
+        || sql_upper.contains("CREATE OR REPLACE PROCEDURE");
+    
+    // CREATE TABLE AS SELECT (DML complejo)
+    let has_create_table_as = sql_upper.contains("CREATE TABLE") && sql_upper.contains("AS SELECT");
+    
+    // Múltiples statements (contar puntos y coma, pero ignorar los que están en strings)
+    // Nota: Esta es una aproximación simple. Para un análisis más preciso,
+    // se necesitaría un parser SQL completo.
+    let semicolon_count = sql_trimmed.matches(';').count();
+    let has_multiple_statements = semicolon_count > 1;
+    
+    // Siempre usar batch_execute para:
+    // - DDL statements (CREATE, ALTER, DROP, etc.)
+    // - DCL statements (GRANT, REVOKE)
+    // - Funciones y procedimientos
+    // - CREATE TABLE AS SELECT
+    // - Múltiples statements
+    let use_batch = has_ddl || has_dcl || has_functions || has_create_table_as || has_multiple_statements;
+    
+    if use_batch {
+        // Usar batch_execute para statements que no retornan filas o múltiples statements
+        let statement_type = if has_ddl { "DDL" }
+            else if has_dcl { "DCL" }
+            else if has_functions { "FUNCTION/PROCEDURE" }
+            else if has_create_table_as { "CREATE TABLE AS SELECT" }
+            else { "MÚLTIPLES STATEMENTS" };
+        
+        println!("[{}] Detectado: {}, usando batch_execute", connection_id, statement_type);
+        println!("[{}] SQL a ejecutar:\n{}", connection_id, sql);
+        
+        // Usar una transacción explícita para garantizar que todas las sentencias
+        // se ejecuten en orden y que si una falla, todas se reviertan
+        let transaction = match client.transaction().await {
+            Ok(txn) => txn,
+            Err(e) => {
+                let error_msg = format!("Error iniciando transacción: {}", e);
+                println!("[{}] {}", connection_id, error_msg);
+                return Err(ExecutionResult {
+                    connection_id: connection_id.clone(),
+                    success: false,
+                    message: error_msg,
+                });
+            }
+        };
+        
+        // Establecer el search_path dentro de la transacción si hay un schema especificado
+        // Esto asegura que los tipos y objetos se creen y referencien correctamente
+        if let Some(schema) = &conn.schema {
+            let set_schema_sql = format!("SET search_path TO {}", schema);
+            if let Err(e) = transaction.execute(&set_schema_sql, &[]).await {
+                let error_msg = format!("Error estableciendo schema '{}' en transacción: {}", schema, e);
+                println!("[{}] {}", connection_id, error_msg);
+                return Err(ExecutionResult {
+                    connection_id: connection_id.clone(),
+                    success: false,
+                    message: error_msg,
+                });
+            }
+            println!("[{}] Schema establecido en transacción: {}", connection_id, schema);
         }
-        Err(e) => {
-            // Obtener detalles más específicos del error
-            let error_msg = if let Some(db_error) = e.as_db_error() {
-                format!(
-                    "Error de base de datos: {} (Código: {})",
-                    db_error.message(),
-                    db_error.code().code()
-                )
-            } else {
-                format!("Error ejecutando SQL: {}", e)
-            };
-            
-            println!("[{}] {}", connection_id, error_msg);
-            Err(ExecutionResult {
-                connection_id: connection_id.clone(),
-                success: false,
-                message: error_msg,
-            })
+        
+        // Ejecutar el SQL dentro de la transacción
+        match transaction.batch_execute(sql).await {
+            Ok(_) => {
+                // Commit de la transacción
+                match transaction.commit().await {
+                    Ok(_) => {
+                        let success_msg = format!("SQL ejecutado exitosamente ({})", statement_type);
+                        println!("[{}] {}", connection_id, success_msg);
+                        Ok(ExecutionResult {
+                            connection_id: connection_id.clone(),
+                            success: true,
+                            message: success_msg,
+                        })
+                    }
+                    Err(e) => {
+                        let error_msg = format!("Error haciendo commit: {}", e);
+                        println!("[{}] {}", connection_id, error_msg);
+                        Err(ExecutionResult {
+                            connection_id: connection_id.clone(),
+                            success: false,
+                            message: error_msg,
+                        })
+                    }
+                }
+            }
+            Err(e) => {
+                // Rollback automático al salir del scope, pero informamos el error
+                let error_msg = if let Some(db_error) = e.as_db_error() {
+                    format!(
+                        "Error de base de datos: {} (Código: {})",
+                        db_error.message(),
+                        db_error.code().code()
+                    )
+                } else {
+                    format!("Error ejecutando SQL: {}", e)
+                };
+                
+                println!("[{}] {} (transacción revertida)", connection_id, error_msg);
+                Err(ExecutionResult {
+                    connection_id: connection_id.clone(),
+                    success: false,
+                    message: error_msg,
+                })
+            }
+        }
+    } else {
+        // Usar execute para DML simple (INSERT, UPDATE, DELETE) que retorna filas afectadas
+        // Nota: SELECT también funcionaría pero no retornaría los datos, solo el número de filas
+        match client.execute(sql, &[]).await {
+            Ok(rows_affected) => {
+                let success_msg = format!("SQL ejecutado exitosamente. Filas afectadas: {}", rows_affected);
+                println!("[{}] {}", connection_id, success_msg);
+                Ok(ExecutionResult {
+                    connection_id: connection_id.clone(),
+                    success: true,
+                    message: success_msg,
+                })
+            }
+            Err(e) => {
+                // Obtener detalles más específicos del error
+                let error_msg = if let Some(db_error) = e.as_db_error() {
+                    format!(
+                        "Error de base de datos: {} (Código: {})",
+                        db_error.message(),
+                        db_error.code().code()
+                    )
+                } else {
+                    format!("Error ejecutando SQL: {}", e)
+                };
+                
+                println!("[{}] {}", connection_id, error_msg);
+                Err(ExecutionResult {
+                    connection_id: connection_id.clone(),
+                    success: false,
+                    message: error_msg,
+                })
+            }
         }
     }
 }

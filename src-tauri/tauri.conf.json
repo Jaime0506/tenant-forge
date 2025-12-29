@@ -13,8 +13,8 @@
     "windows": [
       {
         "title": "Tenant Forge",
-        "width": 950,
-        "height": 650
+        "width": 1080,
+        "height": 720
       }
     ],
     "security": {
