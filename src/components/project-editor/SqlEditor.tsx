@@ -114,7 +114,11 @@ export default function SqlEditor({
                 >
                     Formatear SQL
                 </Button> */}
-                <ButtonCustom isLoading={isExecutingSql} onClick={handleExecute} className="gap-2 bg-red-500 text-white hover:bg-red-600">
+                <ButtonCustom
+                    isLoading={isExecutingSql}
+                    onClick={handleExecute}
+                    className="gap-2 bg-red-500 text-white hover:bg-red-600 border-none shadow-sm"
+                >
                     <Play className="size-3" />
                     Ejecutar
                 </ButtonCustom>
