@@ -27,12 +27,10 @@ export default function ProjectCreateForm({ onProjectCreated }: ProjectCreateFor
 
         try {
             setIsLoading(true);
-            const result = await handleSubmit(async (data: ProjectData) => {
+            await handleSubmit(async (data: ProjectData) => {
                 await createProject(data)
             })
 
-            console.log(result);
-            
             // Llamar al callback después de crear el proyecto exitosamente
             if (onProjectCreated) {
                 onProjectCreated();
@@ -49,7 +47,7 @@ export default function ProjectCreateForm({ onProjectCreated }: ProjectCreateFor
         <div className="flex w-full flex-col gap-6">
             <form onSubmit={onSubmit} className="flex flex-col gap-6 flex-1">
                 {/* Nombre del proyecto */}
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 px-1">
                     <label htmlFor="projectName" className="text-sm font-medium text-foreground">
                         Nombre del proyecto
                     </label>
@@ -65,7 +63,7 @@ export default function ProjectCreateForm({ onProjectCreated }: ProjectCreateFor
                 </div>
 
                 {/* Descripción */}
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 px-1">
                     <label htmlFor="description" className="text-sm font-medium text-foreground">
                         Descripción <span className="text-muted-foreground font-normal">(opcional)</span>
                     </label>
@@ -80,7 +78,7 @@ export default function ProjectCreateForm({ onProjectCreated }: ProjectCreateFor
                 </div>
 
                 {/* Tags */}
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 px-1">
                     <label htmlFor="tags" className="text-sm font-medium text-foreground">
                         Tags <span className="text-muted-foreground font-normal">(opcional)</span>
                     </label>
