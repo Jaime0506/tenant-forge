@@ -3,23 +3,33 @@ import { EditorView } from "@codemirror/view";
 import { Extension } from "@codemirror/state";
 import { syntaxHighlighting } from "@codemirror/language";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, Save } from "lucide-react";
 import { getUniqueConnections, DatabaseConnection } from "./envParser";
 import { envParser, getEnvHighlightStyle, getEnvTheme } from "./envEditorTheme";
 import { useThemeDetector } from "@/hooks/useThemeDetector";
+import { useState } from "react";
+import { useProjectService } from "@/hooks/useProjectService";
+import { toast } from "sonner";
+import ButtonCustom from "../ui-custom/ButtonCustom";
 
 interface EnvEditorProps {
     value: string;
     onChange: (value: string) => void;
     onConfirm?: (connections: DatabaseConnection[]) => void;
+    projectId?: number;
+    onSaveComplete?: () => void;
 }
 
 export default function EnvEditor({
     value,
     onChange,
     onConfirm,
+    projectId,
+    onSaveComplete,
 }: EnvEditorProps) {
     const isDark = useThemeDetector();
+    const [isSaving, setIsSaving] = useState(false);
+    const { saveProject } = useProjectService();
 
     // Crear extensiones dinámicamente según el tema
     const envExtensions: Extension[] = [
@@ -29,9 +39,95 @@ export default function EnvEditor({
         EditorView.lineWrapping,
     ];
 
+    /**
+     * Limpia todas las comillas (simples y dobles, normales y Unicode) de un string
+     * Maneja casos con comillas anidadas o múltiples capas
+     */
+    const cleanQuotes = (value: string | undefined): string | undefined => {
+        if (!value) return value;
+
+        let cleaned = value.trim();
+        let iterations = 0;
+        const maxIterations = 10; // Límite de seguridad
+
+        // Iterar hasta que no haya más cambios (elimina comillas anidadas)
+        while (iterations < maxIterations) {
+            const before = cleaned;
+
+            // Eliminar todas las variantes de comillas simples del inicio y final
+            // Incluye: ' (normal), ' (left single), ' (right single)
+            cleaned = cleaned.replace(/^['''']+/g, "").replace(/['''']+$/g, "");
+
+            // Eliminar todas las variantes de comillas dobles del inicio y final
+            // Incluye: " (normal), " (left double), " (right double)
+            cleaned = cleaned.replace(/^[""""]+/g, "").replace(/[""""]+$/g, "");
+
+            // Si no hubo cambios, salir
+            if (before === cleaned) {
+                break;
+            }
+
+            iterations++;
+        }
+
+        return cleaned.trim();
+    };
+
     const handleConfirm = () => {
         const connections = getUniqueConnections(value);
         onConfirm?.(connections);
+    };
+
+    const handleSave = async () => {
+        if (!value.trim()) {
+            toast.error("No hay contenido para guardar");
+            return;
+        }
+
+        if (!projectId) {
+            toast.error("No se ha especificado el ID del proyecto");
+            return;
+        }
+
+        try {
+            setIsSaving(true);
+
+            // Parsear las conexiones del contenido .env
+            const connections = getUniqueConnections(value);
+
+            if (connections.length === 0) {
+                toast.error("No se encontraron conexiones válidas en el archivo .env");
+                setIsSaving(false);
+                return;
+            }
+
+            // Limpiar las comillas de las conexiones
+            const fixedConnections = connections.map((connection) => {
+                const fixedConnection: DatabaseConnection = {
+                    id: cleanQuotes(connection.id) || connection.id,
+                    type: cleanQuotes(connection.type),
+                    host: cleanQuotes(connection.host),
+                    db: cleanQuotes(connection.db),
+                    schema: cleanQuotes(connection.schema),
+                    user: cleanQuotes(connection.user),
+                    password: cleanQuotes(connection.password),
+                    port: connection.port,
+                };
+
+                return fixedConnection;
+            });
+
+            // Guardar el proyecto con las conexiones (sin ejecutar SQL)
+            await saveProject(projectId, fixedConnections);
+            toast.success("Proyecto guardado exitosamente");
+
+            onSaveComplete?.();
+        } catch (error) {
+            console.error("Error guardando proyecto:", error);
+            toast.error(`Error al guardar: ${error}`);
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -56,7 +152,7 @@ export default function EnvEditor({
                             autocompletion: false,
                             highlightSelectionMatches: false,
                         }}
-                        placeholder="DATABASE_URL=postgresql://user:password@localhost:5432/dbname&#10;API_KEY=your_api_key_here&#10;SECRET_KEY=your_secret_key"
+                        placeholder="POSTGRES_TYPE_MY_CONNECTION = 'postgres'&#10;POSTGRES_HOST_MY_CONNECTION = 'localhost'&#10;POSTGRES_DB_MY_CONNECTION = 'database_name'&#10;POSTGRES_SCHEMA_MY_CONNECTION = 'public'&#10;POSTGRES_USER_MY_CONNECTION = 'username'&#10;POSTGRES_PASSWORD_MY_CONNECTION = 'password'&#10;POSTGRES_PORT_MY_CONNECTION = 5432&#10;&#10;POSTGRES_TYPE_ANOTHER_CONNECTION = 'postgres'&#10;POSTGRES_HOST_ANOTHER_CONNECTION = '192.168.1.100'&#10;POSTGRES_DB_ANOTHER_CONNECTION = 'another_db'&#10;POSTGRES_SCHEMA_ANOTHER_CONNECTION = 'schema_name'&#10;POSTGRES_USER_ANOTHER_CONNECTION = 'user2'&#10;POSTGRES_PASSWORD_ANOTHER_CONNECTION = 'pass2'&#10;POSTGRES_PORT_ANOTHER_CONNECTION = 5432"
                     />
                     <style>{`
                         .cm-editor,
@@ -75,15 +171,24 @@ export default function EnvEditor({
             </div>
 
             {/* Botón Confirmar */}
-            <div className="p-3 border-t border-border bg-muted/30 shrink-0">
+            <div className="flex flex-row gap-2 p-3 border-t border-border bg-muted/30 shrink-0">
                 <Button
                     onClick={handleConfirm}
-                    className="w-full gap-2"
+                    className="w-full gap-2 flex-3"
                     disabled={!value.trim()}
                 >
                     <Check className="size-4" />
                     Confirmar
                 </Button>
+                <ButtonCustom
+                    isLoading={isSaving}
+                    onClick={handleSave}
+                    className="w-full gap-2 flex-1 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
+                    disabled={!value.trim() || isSaving || !projectId}
+                >
+                    <Save className="size-4" />
+                    Guardar
+                </ButtonCustom>
             </div>
         </div>
     );

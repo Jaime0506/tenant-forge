@@ -6,123 +6,40 @@ import EnvEditor from "./EnvEditor";
 import SqlEditor from "./SqlEditor";
 import useStoreManagement from "@/hooks/useStoreManagement";
 import EnvEditorWarningIcon from "./EnvEditorWarningIcon";
-import { DatabaseConnection } from "./envParser";
-import { invoke } from "@tauri-apps/api/core";
+import { ProjectData } from "@/hooks/useProject";
+import { useProjectConnections } from "@/hooks/useProjectConnections";
+import {
+    DatabaseConnection,
+    getUniqueConnections,
+    serializeEnvConnections,
+} from "./envParser";
 
 interface ProjectEditorProps {
     id: number;
+    project: ProjectData;
 }
 
-export default function ProjectEditor({ id }: ProjectEditorProps) {
+export default function ProjectEditor({ id, project }: ProjectEditorProps) {
     const navigate = useNavigate();
     const [envContent, setEnvContent] = useState("");
     const [sqlContent, setSqlContent] = useState("");
     const [shouldAnimateWarning, setShouldAnimateWarning] = useState(false);
-    const [connections, setConnections] = useState<DatabaseConnection[]>([]);
-    const [isExecutingSql, setIsExecutingSql] = useState(false);
-    const [executionResults, setExecutionResults] = useState<
-        Array<{
-            connection_id: string;
-            success: boolean;
-            message: string;
-        }> | null
-    >(null);
+
+    console.log("projectEditor", project);
 
     const { isEnvEditorWarningShown } = useStoreManagement();
 
-    const handleEnvConfirm = (detectedConnections: DatabaseConnection[]) => {
-        setConnections(detectedConnections);
-        console.log("Conexiones detectadas:", detectedConnections);
-    };
-
-    /**
-     * Limpia todas las comillas (simples y dobles, normales y Unicode) de un string
-     * Maneja casos con comillas anidadas o múltiples capas
-     */
-    const cleanQuotes = (value: string | undefined): string | undefined => {
-        if (!value) return value;
-
-        let cleaned = value.trim();
-        let iterations = 0;
-        const maxIterations = 10; // Límite de seguridad
-
-        // Iterar hasta que no haya más cambios (elimina comillas anidadas)
-        while (iterations < maxIterations) {
-            const before = cleaned;
-
-            // Eliminar todas las variantes de comillas simples del inicio y final
-            // Incluye: ' (normal), ' (left single), ' (right single)
-            cleaned = cleaned.replace(/^['''']+/g, "").replace(/['''']+$/g, "");
-
-            // Eliminar todas las variantes de comillas dobles del inicio y final
-            // Incluye: " (normal), " (left double), " (right double)
-            cleaned = cleaned.replace(/^[""""]+/g, "").replace(/[""""]+$/g, "");
-
-            // Si no hubo cambios, salir
-            if (before === cleaned) {
-                break;
-            }
-
-            iterations++;
-        }
-
-        return cleaned.trim();
-    };
+    // Hook para manejar toda la lógica de conexiones
+    const {
+        connections,
+        isExecutingSql,
+        executionResults,
+        handleEnvConfirm,
+        executeSql,
+    } = useProjectConnections();
 
     const handleExecuteSql = async (selectedConnections: DatabaseConnection[]) => {
-        if (selectedConnections.length === 0) {
-            console.warn("No hay conexiones seleccionadas");
-            return;
-        }
-
-        const fixedConnections = selectedConnections.map((connection) => {
-            const fixedConnection: DatabaseConnection = {
-                id: cleanQuotes(connection.id) || connection.id,
-                type: cleanQuotes(connection.type),
-                host: cleanQuotes(connection.host),
-                db: cleanQuotes(connection.db),
-                schema: cleanQuotes(connection.schema),
-                user: cleanQuotes(connection.user),
-                password: cleanQuotes(connection.password),
-                port: connection.port,
-            };
-
-            return fixedConnection;
-        });
-
-        try {
-            setIsExecutingSql(true);
-            setExecutionResults(null); // Limpiar resultados anteriores
-
-            const results = await invoke<Array<{
-                connection_id: string;
-                success: boolean;
-                message: string;
-            }>>("execute_sql", { sql: sqlContent, connections: fixedConnections });
-
-            // Guardar resultados para mostrar en el componente
-            setExecutionResults(results);
-
-            results.forEach((result) => {
-                const status = result.success ? "✅" : "❌";
-                console.log(`${status} [${result.connection_id}]: ${result.message}`);
-            });
-
-            const successful = results.filter((r) => r.success).length;
-            const failed = results.length - successful;
-            console.log(`\nResumen: ${successful} exitosas, ${failed} fallidas de ${results.length} totales`);
-        } catch (error) {
-            console.error("Error ejecutando SQL:", error);
-            setExecutionResults([
-                {
-                    connection_id: "Error",
-                    success: false,
-                    message: `Error al ejecutar: ${error}`,
-                },
-            ]);
-        } finally {
-            setIsExecutingSql(false);
-        }
+        await executeSql(sqlContent, selectedConnections);
     };
 
     useEffect(() => {
@@ -131,6 +48,44 @@ export default function ProjectEditor({ id }: ProjectEditorProps) {
             setShouldAnimateWarning(true);
         }
     }, [isEnvEditorWarningShown]);
+
+    // Cargar connections guardadas en el proyecto al montar el componente
+    useEffect(() => {
+        if (project.connections && project.connections.trim() !== "") {
+            let connectionsToLoad: DatabaseConnection[] = [];
+            let displayContent = project.connections;
+
+            // Intentar parsear como JSON si parece una lista
+            if (project.connections.trim().startsWith("[")) {
+                try {
+                    const parsed = JSON.parse(project.connections);
+                    if (Array.isArray(parsed)) {
+                        connectionsToLoad = parsed;
+                        displayContent = serializeEnvConnections(parsed);
+                    }
+                } catch (e) {
+                    // Si falla el parseo JSON, lo dejamos como está para intentar parsearlo como .env
+                    console.error(
+                        "Error parseando conexiones JSON, intentando como .env:",
+                        e
+                    );
+                }
+            }
+
+            // Si no se han cargado conexiones (porque no era JSON o falló), intentar parsear como .env
+            if (connectionsToLoad.length === 0) {
+                connectionsToLoad = getUniqueConnections(project.connections);
+            }
+
+            // Cargar el contenido (serializado si era JSON) en el editor .env
+            setEnvContent(displayContent);
+
+            // Cargar las conexiones automáticamente en el panel
+            if (connectionsToLoad.length > 0) {
+                handleEnvConfirm(connectionsToLoad);
+            }
+        }
+    }, [project.connections, handleEnvConfirm]);
 
     return (
         <main className="flex w-full h-full rounded-lg border border-gray-200 dark:border-gray-800 flex-col gap-6 p-6 bg-card">
@@ -146,7 +101,7 @@ export default function ProjectEditor({ id }: ProjectEditorProps) {
                     Volver
                 </Button>
                 <h1 className="text-lg font-semibold text-foreground">
-                    Proyecto #{id}
+                    {project.name}
                 </h1>
             </div>
 
@@ -167,6 +122,7 @@ export default function ProjectEditor({ id }: ProjectEditorProps) {
                             value={envContent}
                             onChange={setEnvContent}
                             onConfirm={handleEnvConfirm}
+                            projectId={id}
                         />
                     </div>
                 </div>

@@ -1,3 +1,4 @@
+import { DatabaseConnection } from "@/components/project-editor/envParser";
 import { ProjectData } from "@/hooks/useProject";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -19,4 +20,8 @@ export const getProjectsService = () => {
 
 export const getProjectByIdService = (id: number) => {
     return invoke("get_project_by_id", { id });
+};
+
+export const saveProjectService = (id: number, data: DatabaseConnection[]) => {
+    return invoke("save_project", { id, connections: data });
 };

@@ -4,11 +4,11 @@ import { EditorView } from "@codemirror/view";
 import { Extension } from "@codemirror/state";
 import { sql, PostgreSQL } from "@codemirror/lang-sql";
 import { syntaxHighlighting } from "@codemirror/language";
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
 import { DatabaseConnection } from "./envParser";
 import { getSqlHighlightStyle, getSqlTheme } from "./sqlEditorTheme";
-import { formatSql } from "./sqlUtils";
+// import { formatSql } from "./sqlUtils";
 import ConnectionsPanel from "./ConnectionsPanel";
 import SqlExecutionResults from "./SqlExecutionResults";
 import { useThemeDetector } from "@/hooks/useThemeDetector";
@@ -80,10 +80,10 @@ export default function SqlEditor({
         EditorView.lineWrapping,
     ];
 
-    const handleFormatSql = () => {
-        const formatted = formatSql(value);
-        onChange(formatted);
-    };
+    // const handleFormatSql = () => {
+    //     const formatted = formatSql(value);
+    //     onChange(formatted);
+    // };
 
     const handleExecute = () => {
         // Filtrar solo las conexiones seleccionadas
@@ -105,16 +105,20 @@ export default function SqlEditor({
             />
 
             {/* Barra de herramientas */}
-            <div className="flex items-center justify-between gap-2 p-2 border-b border-border bg-muted/30 shrink-0">
-                <Button
+            <div className="flex items-center justify-end gap-2 p-2 border-b border-border bg-muted/30 shrink-0">
+                {/* <Button
                     variant="outline"
                     size="sm"
                     onClick={handleFormatSql}
                     className="text-xs"
                 >
                     Formatear SQL
-                </Button>
-                <ButtonCustom isLoading={isExecutingSql} onClick={handleExecute} className="gap-2">
+                </Button> */}
+                <ButtonCustom
+                    isLoading={isExecutingSql}
+                    onClick={handleExecute}
+                    className="gap-2 bg-red-500 text-white hover:bg-red-600 border-none shadow-sm"
+                >
                     <Play className="size-3" />
                     Ejecutar
                 </ButtonCustom>

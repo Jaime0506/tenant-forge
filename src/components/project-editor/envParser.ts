@@ -210,3 +210,29 @@ export function getUniqueConnections(envContent: string): DatabaseConnection[] {
 
     return allConnections;
 }
+
+/**
+ * Convierte un array de conexiones de base de datos a formato .env
+ */
+export function serializeEnvConnections(
+    connections: DatabaseConnection[]
+): string {
+    return connections
+        .map((conn) => {
+            const id = conn.id.toUpperCase();
+            const lines: string[] = [];
+
+            if (conn.type) lines.push(`POSTGRES_TYPE_${id} = "${conn.type}"`);
+            if (conn.host) lines.push(`POSTGRES_HOST_${id} = "${conn.host}"`);
+            if (conn.db) lines.push(`POSTGRES_DB_${id} = "${conn.db}"`);
+            if (conn.schema)
+                lines.push(`POSTGRES_SCHEMA_${id} = "${conn.schema}"`);
+            if (conn.user) lines.push(`POSTGRES_USER_${id} = "${conn.user}"`);
+            if (conn.password)
+                lines.push(`POSTGRES_PASSWORD_${id} = "${conn.password}"`);
+            if (conn.port) lines.push(`POSTGRES_PORT_${id} = ${conn.port}`);
+
+            return lines.join("\n");
+        })
+        .join("\n\n");
+}
