@@ -1,5 +1,6 @@
 // es como un index.ts de la carpeta commands
 mod commands;
+mod db;
 
 use commands::sql_execute::execute_sql;
 use commands::project::{save_project, create_proyect, get_projects};

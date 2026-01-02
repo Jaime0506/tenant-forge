@@ -2,6 +2,9 @@ use serde::{Deserialize, Serialize};
 use rusqlite::{Connection, params};
 use serde_json::Value;
 
+use tauri::{AppHandle};
+use crate::db::get_db_path;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ExecutionResult {
     pub success: bool,
@@ -9,11 +12,12 @@ pub struct ExecutionResult {
 }
 
 #[tauri::command]
-pub async fn save_project(id: i64, connections: Vec<Value>) -> Result<ExecutionResult, String> {
+pub async fn save_project(app: AppHandle, id: i64, connections: Vec<Value>) -> Result<ExecutionResult, String> {
     println!("Saving project with id: {}", id);
     println!("Connections: {:?}", connections);
 
-    let conn = Connection::open("app.db").map_err(|e| e.to_string())?;
+    let db_path = get_db_path(&app)?;
+    let conn = Connection::open(db_path).map_err(|e| e.to_string())?;
 
     // Convertir el vector de connections a JSON string
     let connections_json = serde_json::to_string(&connections).map_err(|e| e.to_string())?;
@@ -41,8 +45,9 @@ pub struct ProjectDataResult {
 }
 
 #[tauri::command]
-pub fn create_proyect(name: String, description: String, tags: Option<Vec<String>>) -> Result<(), String> {
-    let conn = Connection::open("app.db").map_err(|e| e.to_string())?;
+pub fn create_proyect(app: AppHandle, name: String, description: String, tags: Option<Vec<String>>) -> Result<(), String> {
+    let db_path = get_db_path(&app)?;
+    let conn = Connection::open(db_path).map_err(|e| e.to_string())?;
 
     conn.execute(
         "CREATE TABLE IF NOT EXISTS projects (id INTEGER PRIMARY KEY, name TEXT, description TEXT, tags TEXT, connections TEXT)",
@@ -64,8 +69,9 @@ pub fn create_proyect(name: String, description: String, tags: Option<Vec<String
 }
 
 #[tauri::command]
-pub fn get_projects() -> Result<Vec<ProjectDataResult>, String> {
-    let conn = Connection::open("app.db").map_err(|e| e.to_string())?;
+pub fn get_projects(app: AppHandle) -> Result<Vec<ProjectDataResult>, String> {
+    let db_path = get_db_path(&app)?;
+    let conn = Connection::open(db_path).map_err(|e| e.to_string())?;
 
     let mut stmt = conn.prepare("SELECT id, name, description, tags, connections FROM projects")
         .map_err(|e| e.to_string())?;
