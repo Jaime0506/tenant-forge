@@ -78,7 +78,10 @@ Ensure you have the following installed on your machine:
 
 1.  **Create a New Project**: Open the app and define a new project space.
 2.  **Configure Connections**: Paste your `.env` content containing the database connection strings.
+
     -   _The app parses standard key=value connection strings._
+    -   See [EXAMPLE.md](./EXAMPLE.md) for a complete configuration guide.
+
 3.  **Execute SQL**: Write your SQL query in the editor and hit run. Watch as it executes across all valid connections found in your configuration.
 
 ## 🤝 Contributing
