@@ -91,14 +91,25 @@ We welcome contributions from the community! This is a **Source Available** proj
 4.  Push to the branch (`git push origin feature/AmazingFeature`)
 5.  Open a Pull Request
 
+## License & Commercial Use ⚠️
+
+This project is licensed under the **Polyform Noncommercial License 1.0.0**.
+
+You are free to:
+
+-   Fork
+-   Modify
+-   Use for personal or educational projects
+
+You are NOT allowed to:
+
+-   Sell this software
+-   Offer it as part of a paid product or SaaS
+-   Monetize it directly or indirectly
+
+If you want a commercial license, contact me.
+
 ---
-
-## ⚠️ Commercial Use Notice
-
-This project is licensed under the Polyform Noncommercial License.
-
-Any commercial use — including SaaS products, paid services, subscriptions,
-or enterprise deployment — is strictly forbidden without a commercial license.
 
 <div align="center">
   Made with ❤️ by Jaime0506
