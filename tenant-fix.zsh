@@ -6,8 +6,19 @@ echo "   🛠️  macOS App Unlocker - Dev Edition"
 echo "═══════════════════════════════════════════════"
 echo ""
 
-read "APP_PATH?📦 Arrastra aquí tu archivo .app y presiona ENTER: "
+print -n "📦 Arrastra aquí tu archivo .app y presiona ENTER: "
+read APP_PATH
 
+# Eliminar saltos de línea
+APP_PATH=$(echo "$APP_PATH" | tr -d '\n')
+
+# Quitar comillas si vienen incompletas
+APP_PATH="${APP_PATH#\'}"
+APP_PATH="${APP_PATH%\'}"
+APP_PATH="${APP_PATH#\"}"
+APP_PATH="${APP_PATH%\"}"
+
+# Expandir ~
 APP_PATH="${APP_PATH/#\~/$HOME}"
 
 if [ ! -d "$APP_PATH" ]; then
