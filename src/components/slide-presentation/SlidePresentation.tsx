@@ -18,7 +18,7 @@ export function SlidePresentation() {
   const currentSlideData = slides[currentSlide];
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-white dark:bg-slate-900">
+    <div className="relative w-full h-screen overflow-hidden bg-ink-black-950">
       <AnimatedBackground />
       <div className="relative z-10 flex flex-col items-center justify-center h-full px-2 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 overflow-y-auto">
         <SlideContent slide={currentSlideData} currentSlide={currentSlide} />
