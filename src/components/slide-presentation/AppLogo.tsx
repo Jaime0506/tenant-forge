@@ -1,36 +1,49 @@
 import { motion } from "motion/react";
+import AppIcon from "../../../assets/app-icon.png";
 
 export function AppLogo() {
+  const text = "TenantForge";
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.05, duration: 0.3 }}
-      className="mb-4 sm:mb-6 md:mb-8"
-    >
-      {/* <motion.div
-        className="flex items-center justify-center gap-2 sm:gap-4 mb-4 sm:mb-6"
-        initial={{ scale: 0.8 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 0.1, duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+    <div className="flex flex-col items-center justify-center gap-8 mb-8 sm:mb-12">
+      <motion.div
+        initial={{ scale: 0, rotate: -180 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{
+          delay: 1.2,
+          type: "spring",
+          stiffness: 260,
+          damping: 20
+        }}
+        className="relative"
       >
-        <motion.div
-          className="p-2 sm:p-3 md:p-4 rounded-xl sm:rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 shadow-2xl will-change-transform"
-          whileHover={{ scale: 1.05 }}
-          transition={{ duration: 0.2 }}
-        >
-          <Database className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 text-white" />
-        </motion.div>
-      </motion.div> */}
-      <motion.h1
-        className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-2 sm:mb-3 md:mb-4 bg-linear-to-r from-blue-600 via-indigo-600 to-blue-800 dark:from-blue-400 dark:via-indigo-400 dark:to-blue-300 bg-clip-text text-transparent px-2"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.15, duration: 0.3 }}
+        <div className="absolute inset-0 bg-cerulean-500/10 blur-2xl rounded-full" />
+        <img
+          src={AppIcon}
+          alt="TenantForge Icon"
+          className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 relative z-10 drop-shadow-[0_0_15px_rgba(8,191,247,0.15)]"
+        />
+      </motion.div>
+
+      <motion.div
+        initial="initial"
+        animate="animate"
+        transition={{ staggerChildren: 0.1 }}
+        className="flex overflow-hidden"
       >
-        TenantForge
-      </motion.h1>
-    </motion.div>
+        {text.split("").map((char, index) => (
+          <motion.span
+            key={index}
+            variants={{
+              initial: { opacity: 0, y: 20 },
+              animate: { opacity: 1, y: 0 }
+            }}
+            className="py-1 text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-icy-aqua-50 bg-clip-text px-0.5 tracking-tighter"
+          >
+            {char}
+          </motion.span>
+        ))}
+      </motion.div>
+    </div>
   );
 }
-

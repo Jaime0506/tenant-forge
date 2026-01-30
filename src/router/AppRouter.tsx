@@ -10,11 +10,11 @@ export default function AppRouter() {
   const { isFirstTime } = useStoreManagement();
 
   useEffect(() => {
-    console.log('CAMBIO ');
     if (isFirstTime !== undefined && isFirstTime !== null && !isFirstTime) {
       navigate("/main");
     }
   }, [isFirstTime]);
+
   // Si es undefined o null, efecto de loading
   if (isFirstTime === undefined || isFirstTime === null) {
     return <div>Loading...</div>;
