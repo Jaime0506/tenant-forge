@@ -88,7 +88,7 @@ export default function ProjectEditor({ id, project }: ProjectEditorProps) {
             {/* Información del proyecto (Opcional, ya que el nombre está en el Tab) */}
             <div className="flex items-center gap-3 mb-2">
                 <div className="flex flex-col">
-                    <span className="text-[10px] font-black text-cerulean-500 uppercase tracking-[0.2em] leading-none mb-1">
+                    <span className="text-xs font-black text-cerulean-500 uppercase tracking-[0.2em] leading-none mb-1.5">
                         Proyecto Activo
                     </span>
                     <h1 className="text-xl font-black text-white tracking-tighter leading-none">
@@ -102,7 +102,7 @@ export default function ProjectEditor({ id, project }: ProjectEditorProps) {
                 {/* Columna izquierda - Editor .env */}
                 <div className="flex flex-col w-1/2 border border-cerulean-500/10 rounded-xl overflow-hidden bg-ink-black-950/40 backdrop-blur-sm">
                     <div className="p-4 border-b border-cerulean-500/10 flex flex-row space-between items-center gap-2 shrink-0 bg-ink-black-900/40">
-                        <h2 className="text-[10px] font-black text-cerulean-500 uppercase tracking-[0.2em] flex-1">
+                        <h2 className="text-xs font-black text-cerulean-500 uppercase tracking-[0.2em] flex-1">
                             Variables de Entorno (.env)
                         </h2>
                         {isEnvEditorWarningShown && (
@@ -122,7 +122,7 @@ export default function ProjectEditor({ id, project }: ProjectEditorProps) {
                 {/* Columna derecha - Editor SQL */}
                 <div className="flex flex-col w-1/2 border border-cerulean-500/10 rounded-xl overflow-hidden bg-ink-black-950/40 backdrop-blur-sm">
                     <div className="p-4 border-b border-cerulean-500/10 shrink-0 bg-ink-black-900/40">
-                        <h2 className="text-[10px] font-black text-cerulean-500 uppercase tracking-[0.2em]">
+                        <h2 className="text-xs font-black text-cerulean-500 uppercase tracking-[0.2em]">
                             Editor SQL (PostgreSQL)
                         </h2>
                     </div>

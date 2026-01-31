@@ -109,9 +109,9 @@ export default function SqlEditor({
                 <ButtonCustom
                     isLoading={isExecutingSql}
                     onClick={handleExecute}
-                    className="group relative gap-2.5 bg-ink-black-900 hover:bg-ink-black-800 text-white font-black uppercase tracking-[0.15em] text-[10px] rounded-xl h-auto px-6 py-2.5 border border-cerulean-900/50 shadow-2xl transition-all duration-200 cursor-pointer overflow-hidden"
+                    className="group relative gap-2.5 bg-ink-black-900 hover:bg-ink-black-800 text-white font-black uppercase tracking-[0.15em] text-xs rounded-xl h-auto px-6 py-3 border border-cerulean-900/50 shadow-2xl transition-all duration-200 cursor-pointer overflow-hidden"
                 >
-                    <Play className="size-3.5 fill-current" />
+                    <Play className="size-4 fill-current" />
                     Ejecutar SQL
                 </ButtonCustom>
             </div>

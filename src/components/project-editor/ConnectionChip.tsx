@@ -24,7 +24,7 @@ export default function ConnectionChip({
                     type="button"
                     onClick={onSelect}
                     className={`
-                        inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest
+                        inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest
                         transition-all duration-200 cursor-pointer border
                         ${isSelected
                             ? "bg-ink-black-900 text-white border-cerulean-500/40 shadow-xl"

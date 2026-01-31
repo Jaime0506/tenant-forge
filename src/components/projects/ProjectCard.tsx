@@ -54,7 +54,7 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
                     {project.name}
                 </h3>
                 {project.id && (
-                    <span className="text-[10px] text-cerulean-300 font-black tracking-widest uppercase bg-cerulean-400/10 px-2 py-0.5 rounded shrink-0 border border-cerulean-400/20 shadow-inner">
+                    <span className="text-xs text-cerulean-300 font-black tracking-widest uppercase bg-cerulean-400/10 px-2.5 py-1 rounded shrink-0 border border-cerulean-400/20 shadow-inner">
                         ID: {project.id}
                     </span>
                 )}
@@ -62,7 +62,7 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
 
             {/* Descripción */}
             {project.description && (
-                <p className="text-sm text-ink-black-200 line-clamp-3 relative z-10 font-medium leading-relaxed">
+                <p className="text-base text-ink-black-200 line-clamp-3 relative z-10 font-medium leading-relaxed">
                     {project.description}
                 </p>
             )}
@@ -73,7 +73,7 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
                     {project.tags.map((tag, index) => (
                         <span
                             key={index}
-                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-ink-black-950/80 text-cerulean-300 border border-cerulean-800/30 uppercase tracking-wider"
+                            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-black bg-ink-black-950/80 text-cerulean-300 border border-cerulean-800/30 uppercase tracking-widest"
                         >
                             {tag}
                         </span>

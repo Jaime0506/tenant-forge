@@ -59,7 +59,7 @@ export default function ProjectsView({ onProjectClick }: ProjectsViewProps) {
                             <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tighter group-hover:text-cerulean-400 transition-colors">
                                 Crear proyecto
                             </h2>
-                            <p className="text-sm sm:text-base text-ink-black-200 font-semibold tracking-wide">
+                            <p className="text-base text-ink-black-200 font-semibold tracking-wide">
                                 Completa la información para crear un nuevo proyecto. Solo el nombre es obligatorio.
                             </p>
                         </div>

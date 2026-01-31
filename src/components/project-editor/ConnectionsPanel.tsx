@@ -26,7 +26,7 @@ export default function ConnectionsPanel({
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                     <Database className="size-3 text-cerulean-400" />
-                    <span className="text-[10px] font-black text-cerulean-100 uppercase tracking-[0.2em]">
+                    <span className="text-xs font-black text-cerulean-100 uppercase tracking-[0.2em]">
                         Conexiones: {selectedConnections.size} de{" "}
                         {connections.length} seleccionadas
                     </span>
@@ -35,7 +35,7 @@ export default function ConnectionsPanel({
                     <button
                         type="button"
                         onClick={onSelectAll}
-                        className="text-[10px] font-black text-cerulean-300 hover:text-white uppercase tracking-widest px-2 py-1 transition-colors cursor-pointer"
+                        className="text-xs font-black text-cerulean-300 hover:text-white uppercase tracking-widest px-2 py-1 transition-colors cursor-pointer"
                     >
                         Todas
                     </button>
@@ -43,7 +43,7 @@ export default function ConnectionsPanel({
                     <button
                         type="button"
                         onClick={onSelectNone}
-                        className="text-[10px] font-black text-cerulean-300 hover:text-white uppercase tracking-widest px-2 py-1 transition-colors cursor-pointer"
+                        className="text-xs font-black text-cerulean-300 hover:text-white uppercase tracking-widest px-2 py-1 transition-colors cursor-pointer"
                     >
                         Ninguna
                     </button>

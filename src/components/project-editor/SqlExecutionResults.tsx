@@ -31,11 +31,11 @@ export default function SqlExecutionResults({
                     ) : (
                         <XCircle className="size-3 text-red-400" />
                     )}
-                    <span className="text-[10px] font-black text-cerulean-100 uppercase tracking-[0.2em]">
+                    <span className="text-xs font-black text-cerulean-100 uppercase tracking-[0.2em]">
                         Resultados de Ejecución
                     </span>
                 </div>
-                <div className="bg-ink-black-900 border border-cerulean-900/50 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest text-cerulean-100">
+                <div className="bg-ink-black-900 border border-cerulean-900/50 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest text-cerulean-100">
                     <span className="text-green-400">{successful}</span> <span className="text-ink-black-400 mx-1">/</span> <span className="text-white">{results.length}</span>
                 </div>
             </div>

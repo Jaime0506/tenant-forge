@@ -46,9 +46,9 @@ export default function ProjectsPage() {
             <TabsList className="bg-ink-black-900/40 border border-cerulean-500/20 backdrop-blur-md p-1.5 rounded-xl h-auto self-start overflow-hidden">
               <TabsTrigger
                 value="home"
-                className="gap-2.5 px-6 py-3.5 data-[state=active]:bg-cerulean-500/20 data-[state=active]:text-white text-ink-black-300 font-black uppercase tracking-[0.15em] text-[11px] rounded-lg transition-all cursor-pointer"
+                className="gap-2.5 px-6 py-4 data-[state=active]:bg-cerulean-500/20 data-[state=active]:text-white text-ink-black-300 font-bold uppercase tracking-[0.15em] text-[13px] rounded-lg transition-all cursor-pointer"
               >
-                <Home className="size-4" />
+                <Home className="size-5" />
                 Inicio
               </TabsTrigger>
 
@@ -63,14 +63,14 @@ export default function ProjectsPage() {
                   >
                     <TabsTrigger
                       value={project.id?.toString() || ""}
-                      className="group gap-2.5 px-6 py-3.5 data-[state=active]:bg-cerulean-500/20 data-[state=active]:text-white text-ink-black-300 font-black uppercase tracking-[0.15em] text-[11px] rounded-lg transition-all relative pr-10 cursor-pointer"
+                      className="group gap-2.5 px-6 py-4 data-[state=active]:bg-cerulean-500/20 data-[state=active]:text-white text-ink-black-300 font-bold uppercase tracking-[0.15em] text-[13px] rounded-lg transition-all relative pr-12 cursor-pointer"
                     >
                       <span className="truncate max-w-[150px]">{project.name}</span>
                       <button
                         onClick={(e) => handleCloseProject(e, project.id!)}
-                        className="absolute right-3 p-1 rounded-full hover:bg-white/10 text-ink-black-400 hover:text-white transition-colors cursor-pointer"
+                        className="absolute right-3 p-1.5 rounded-full hover:bg-white/10 text-ink-black-400 hover:text-white transition-colors cursor-pointer"
                       >
-                        <X className="size-3" />
+                        <X className="size-4" />
                       </button>
                     </TabsTrigger>
                   </motion.div>
