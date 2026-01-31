@@ -13,7 +13,6 @@ const ROUTES = [
 export default function DebugMenu() {
     const [isOpen, setIsOpen] = useState(false);
     const navigate = useNavigate();
-
     // Solo renderizar en desarrollo
     if (!import.meta.env.DEV) return null;
 
