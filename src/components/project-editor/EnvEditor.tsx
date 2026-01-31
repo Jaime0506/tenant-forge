@@ -19,6 +19,7 @@ interface EnvEditorProps {
     value: string;
     onChange: (value: string) => void;
     onConfirm?: (connections: DatabaseConnection[]) => void;
+    currentConnections?: DatabaseConnection[];
     projectId?: number;
     onSaveComplete?: () => void;
 }
@@ -27,6 +28,7 @@ export default function EnvEditor({
     value,
     onChange,
     onConfirm,
+    currentConnections = [],
     projectId,
     onSaveComplete,
 }: EnvEditorProps) {
@@ -117,10 +119,19 @@ export default function EnvEditor({
                 return;
             }
 
-            // Limpiar las comillas de las conexiones
+            // Conservar displayName (y envKey) de las conexiones actuales al guardar
             const fixedConnections = connections.map((connection) => {
+                const match = currentConnections.find(
+                    (c) =>
+                        c.id === connection.id ||
+                        (c.envKey === connection.envKey &&
+                            c.host === connection.host &&
+                            c.port === connection.port)
+                );
                 const fixedConnection: DatabaseConnection = {
                     id: cleanQuotes(connection.id) || connection.id,
+                    envKey: connection.envKey ?? match?.envKey,
+                    displayName: match?.displayName,
                     type: cleanQuotes(connection.type),
                     host: cleanQuotes(connection.host),
                     db: cleanQuotes(connection.db),
@@ -129,7 +140,6 @@ export default function EnvEditor({
                     password: cleanQuotes(connection.password),
                     port: connection.port,
                 };
-
                 return fixedConnection;
             });
 

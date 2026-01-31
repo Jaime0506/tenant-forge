@@ -7,15 +7,18 @@ import { CheckCircle2, XCircle, Terminal } from "lucide-react";
 
 interface ExecutionResultChipProps {
     connectionId: string;
+    displayName?: string;
     success: boolean;
     message: string;
 }
 
 export default function ExecutionResultChip({
     connectionId,
+    displayName,
     success,
     message,
 }: ExecutionResultChipProps) {
+    const label = displayName ?? connectionId;
     return (
         <Tooltip>
             <TooltipTrigger asChild>
@@ -35,7 +38,7 @@ export default function ExecutionResultChip({
                         <XCircle className="size-3.5 shrink-0 uppercase" />
                     )}
                     <span className="max-w-[150px] truncate leading-none">
-                        {connectionId}
+                        {label}
                     </span>
                 </div>
             </TooltipTrigger>
@@ -51,7 +54,9 @@ export default function ExecutionResultChip({
                     <div className="flex flex-col gap-1.5">
                         <span className="text-ink-black-400 font-black uppercase tracking-widest text-[10px]">Conexión:</span>
                         <code className="bg-ink-black-900 px-2 py-1.5 rounded text-xs font-mono border border-cerulean-800/20 break-all text-cerulean-100">
-                            {connectionId}
+                            {displayName != null && displayName !== connectionId
+                                ? `${displayName} (${connectionId})`
+                                : connectionId}
                         </code>
                     </div>
 

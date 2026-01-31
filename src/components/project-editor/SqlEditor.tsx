@@ -26,6 +26,7 @@ interface SqlEditorProps {
     onChange: (value: string) => void;
     connections?: DatabaseConnection[];
     onExecute: (selectedConnections: DatabaseConnection[]) => void;
+    onRenameConnection?: (connectionId: string, displayName: string) => void;
     isExecutingSql: boolean;
     executionResults?: ExecutionResult[] | null;
 }
@@ -35,6 +36,7 @@ export default function SqlEditor({
     onChange,
     connections = [],
     onExecute,
+    onRenameConnection,
     isExecutingSql,
     executionResults = null,
 }: SqlEditorProps) {
@@ -116,6 +118,7 @@ export default function SqlEditor({
                 onToggleConnection={toggleConnection}
                 onSelectAll={selectAll}
                 onSelectNone={selectNone}
+                onRename={onRenameConnection}
             />
 
             {/* Barra de herramientas */}
@@ -180,7 +183,10 @@ export default function SqlEditor({
             </div>
 
             {/* Resultados de ejecución */}
-            <SqlExecutionResults results={executionResults} />
+            <SqlExecutionResults
+                results={executionResults}
+                connections={connections}
+            />
         </div>
     );
 }

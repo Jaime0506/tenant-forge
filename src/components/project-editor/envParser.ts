@@ -1,6 +1,8 @@
 // Tipos para las conexiones de base de datos
 export interface DatabaseConnection {
-    id: string; // Identificador único de la conexión (ej: HIPOTECARIA_GESEL_SALVADOR)
+    id: string; // Identificador único (para UI y resultados; puede incluir puerto si hay duplicados)
+    envKey?: string; // Sufijo en variables .env (ej: MY_CONNECTION en POSTGRES_DB_MY_CONNECTION)
+    displayName?: string; // Nombre editable mostrado en chips y resultados
     type?: string;
     host?: string;
     db?: string;
@@ -199,13 +201,36 @@ export function getUniqueConnections(envContent: string): DatabaseConnection[] {
         }
 
         if (baseId) {
-            // Limpiar el DB también antes de usarlo en el ID
+            connection.envKey = baseId;
             const cleanDb = connection.db ? cleanQuotes(connection.db) : "";
-
-            // Crear un ID único basado solo en el DB para simplificar
             connection.id = cleanDb || `${baseId}_${blockIndex + 1}`;
             allConnections.push(connection);
         }
+    }
+
+    // Desambiguar ids repetidos (mismo db, distinto puerto/host) para que cada chip sea identificable
+    const idCount = new Map<string, number>();
+    for (const conn of allConnections) {
+        idCount.set(conn.id, (idCount.get(conn.id) ?? 0) + 1);
+    }
+    const usedIds = new Set<string>();
+    for (const conn of allConnections) {
+        if ((idCount.get(conn.id) ?? 0) <= 1) {
+            usedIds.add(conn.id);
+            continue;
+        }
+        let candidate = conn.id;
+        if (conn.port != null) candidate = `${conn.id}_${conn.port}`;
+        if (usedIds.has(candidate) && (conn.host || conn.port != null)) {
+            candidate = `${conn.id}_${conn.host ?? "host"}_${conn.port ?? ""}`;
+        }
+        let suffix = 0;
+        while (usedIds.has(candidate)) {
+            suffix++;
+            candidate = `${conn.id}_${suffix}`;
+        }
+        conn.id = candidate;
+        usedIds.add(conn.id);
     }
 
     return allConnections;
@@ -218,20 +243,22 @@ export function serializeEnvConnections(
     connections: DatabaseConnection[]
 ): string {
     return connections
-        .map((conn) => {
-            const id = conn.id.toUpperCase();
+        .filter((conn): conn is DatabaseConnection => conn != null && typeof conn === "object")
+        .map((conn, index) => {
+            const raw = conn.envKey ?? conn.id ?? "";
+            const suffix =
+                (typeof raw === "string" ? raw : String(raw)).toUpperCase() ||
+                `CONNECTION_${index + 1}`;
             const lines: string[] = [];
-
-            if (conn.type) lines.push(`POSTGRES_TYPE_${id} = "${conn.type}"`);
-            if (conn.host) lines.push(`POSTGRES_HOST_${id} = "${conn.host}"`);
-            if (conn.db) lines.push(`POSTGRES_DB_${id} = "${conn.db}"`);
+            if (conn.type) lines.push(`POSTGRES_TYPE_${suffix} = "${conn.type}"`);
+            if (conn.host) lines.push(`POSTGRES_HOST_${suffix} = "${conn.host}"`);
+            if (conn.db) lines.push(`POSTGRES_DB_${suffix} = "${conn.db}"`);
             if (conn.schema)
-                lines.push(`POSTGRES_SCHEMA_${id} = "${conn.schema}"`);
-            if (conn.user) lines.push(`POSTGRES_USER_${id} = "${conn.user}"`);
+                lines.push(`POSTGRES_SCHEMA_${suffix} = "${conn.schema}"`);
+            if (conn.user) lines.push(`POSTGRES_USER_${suffix} = "${conn.user}"`);
             if (conn.password)
-                lines.push(`POSTGRES_PASSWORD_${id} = "${conn.password}"`);
-            if (conn.port) lines.push(`POSTGRES_PORT_${id} = ${conn.port}`);
-
+                lines.push(`POSTGRES_PASSWORD_${suffix} = "${conn.password}"`);
+            if (conn.port) lines.push(`POSTGRES_PORT_${suffix} = ${conn.port}`);
             return lines.join("\n");
         })
         .join("\n\n");

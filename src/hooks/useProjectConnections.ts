@@ -50,11 +50,36 @@ export const useProjectConnections = () => {
     >(null);
 
     /**
-     * Maneja la confirmación de conexiones detectadas desde el editor .env
+     * Maneja la confirmación de conexiones detectadas desde el editor .env.
+     * Conserva displayName de las conexiones actuales al re-parsear.
      */
     const handleEnvConfirm = useCallback(
         (detectedConnections: DatabaseConnection[]) => {
-            setConnections(detectedConnections);
+            setConnections((prev) => {
+                if (prev.length === 0) return detectedConnections;
+                return detectedConnections.map((detected) => {
+                    const match = prev.find(
+                        (p) =>
+                            p.id === detected.id ||
+                            (p.envKey === detected.envKey &&
+                                p.host === detected.host &&
+                                p.port === detected.port)
+                    );
+                    if (!match?.displayName) return detected;
+                    return { ...detected, displayName: match.displayName };
+                });
+            });
+        },
+        []
+    );
+
+    const updateConnectionDisplayName = useCallback(
+        (connectionId: string, displayName: string) => {
+            setConnections((prev) =>
+                prev.map((c) =>
+                    c.id === connectionId ? { ...c, displayName } : c
+                )
+            );
         },
         []
     );
@@ -68,6 +93,8 @@ export const useProjectConnections = () => {
         return connectionsToClean.map((connection) => {
             const fixedConnection: DatabaseConnection = {
                 id: cleanQuotes(connection.id) || connection.id,
+                envKey: connection.envKey,
+                displayName: connection.displayName,
                 type: cleanQuotes(connection.type),
                 host: cleanQuotes(connection.host),
                 db: cleanQuotes(connection.db),
@@ -76,7 +103,6 @@ export const useProjectConnections = () => {
                 password: cleanQuotes(connection.password),
                 port: connection.port,
             };
-
             return fixedConnection;
         });
     };
@@ -138,6 +164,7 @@ export const useProjectConnections = () => {
         isExecutingSql,
         executionResults,
         handleEnvConfirm,
+        updateConnectionDisplayName,
         executeSql,
     };
 };
