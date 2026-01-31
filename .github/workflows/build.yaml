@@ -7,19 +7,23 @@ on:
 
 permissions:
     contents: write
+    attestations: write
+    id-token: write
 
 jobs:
     publish:
         strategy:
             fail-fast: false
             matrix:
-                os: [windows-latest, macos-latest]
+                include:
+                    - platform: "macos-latest"
+                      args: "--target aarch64-apple-darwin"
+                    - platform: "windows-latest"
+                      args: ""
 
-        runs-on: ${{ matrix.os }}
-
+        runs-on: ${{ matrix.platform }}
         steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
+            - uses: actions/checkout@v4
 
             - name: Setup Node.js
               uses: actions/setup-node@v4
@@ -37,6 +41,8 @@ jobs:
 
             - name: Setup Rust
               uses: dtolnay/rust-toolchain@stable
+              with:
+                  targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin' || '' }}
 
             - name: Rust cache
               uses: swatinem/rust-cache@v2
@@ -53,13 +59,13 @@ jobs:
                   choco install llvm -y
 
             - name: Build and Publish
-              uses: tauri-apps/tauri-action@v0
+              uses: tauri-apps/tauri-action@v1
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
-                  tagName: v__VERSION__ # Tauri action handles __VERSION__ from package.json
+                  tagName: v__VERSION__
                   releaseName: "App Release v__VERSION__"
-                  releaseBody: "Automated production release."
-                  releaseDraft: false
+                  releaseBody: "Automated production release. See the assets to download."
+                  releaseDraft: true
                   prerelease: false
-                  args: ${{ runner.os == 'macos-latest' && '--target aarch64-apple-darwin' || '' }}
+                  args: ${{ matrix.args }}
