@@ -50,8 +50,8 @@ jobs:
             - name: Verify Tauri build
               run: pnpm tauri build --no-bundle # Build rápido sin empaquetar
 
-    create-release-pr:
-        name: Auto PR Main -> Release
+    promote-to-release:
+        name: Auto Merge main -> release
         needs: test-and-build
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         runs-on: ubuntu-latest
@@ -63,18 +63,18 @@ jobs:
               with:
                   fetch-depth: 0
 
-            - name: Create Pull Request to Release
+            - name: Create and Merge PR
               run: |
-                  # Verificar si existe la rama release
-                  if ! git show-ref --verify --quiet refs/remotes/origin/release; then
-                    echo "Error: Branch 'release' does not exist."
-                    exit 1
-                  fi
-
-                  # Intentar crear el PR
+                  # 1. Crear el PR
                   gh pr create \
                     --base release \
                     --head main \
                     --title "🚀 Production: Merge main into release" \
-                    --body "Automated PR created by CI after successful build and tests on main branch." \
-                    || echo "PR already exists or nothing to merge."
+                    --body "Automated PR created by CI. Build and tests passed on main." \
+                    || echo "PR already exists."
+
+                  # 2. Hacer el merge (esto pondrá el código en release)
+                  gh pr merge --merge --admin
+
+                  # 3. Disparar el build de producción explícitamente
+                  gh workflow run build.yaml --ref release
