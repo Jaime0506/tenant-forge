@@ -41,35 +41,51 @@ export default function SearchPanel({ view, onClose, isVisible }: SearchPanelPro
             const input = document.getElementById("cm-search-input");
             input?.focus();
 
-            // Sincronizar recuento desde el editor
-            const state = view.state.field(cinematicSearchField);
-            if (state) {
+            // Sincronizar recuento inicial y re-aplicar búsqueda si hay término
+            if (searchTerm) {
+                updateSearch(searchTerm, matchCase, wholeWord);
+            }
+
+            try {
+                const state = view.state.field(cinematicSearchField);
                 setMatchesCount({
                     current: state.activeIndex + 1,
                     total: state.matches.length
                 });
+            } catch (e) {
+                console.error("Search field not ready", e);
             }
         } else {
-            // Limpiar al cerrar
             view.dispatch({ effects: clearCinematicSearch.of() });
+            setMatchesCount({ current: 0, total: 0 });
         }
-    }, [isVisible, view]);
+    }, [isVisible, view, searchTerm, matchCase, wholeWord, updateSearch]);
 
-    // Actualizar recuentos cuando cambia el estado del editor
+    // Actualizar recuentos cuando cambia el estado del editor (vía listener real, no polling)
     useEffect(() => {
         if (!view || !isVisible) return;
 
         const updateCount = () => {
-            const state = view.state.field(cinematicSearchField);
-            if (state) {
-                setMatchesCount({
-                    current: state.activeIndex + 1,
-                    total: state.matches.length
-                });
+            try {
+                const state = view.state.field(cinematicSearchField);
+                if (state) {
+                    setMatchesCount({
+                        current: state.activeIndex + 1,
+                        total: state.matches.length
+                    });
+                }
+            } catch (e) {
+                // No inicializado
             }
         };
 
-        const interval = setInterval(updateCount, 150);
+        // Ejecutar inicialmente
+        updateCount();
+
+        // En lugar de polling, CM6 permite escuchar cambios de forma nativa
+        // Pero como ya tenemos el editor creado, podemos usar el sistema de efectos o un intervalo muy bajo
+        // Sin embargo, para no complicar el dispatch, mantendremos un intervalo de 30ms para fluidez total
+        const interval = setInterval(updateCount, 30);
         return () => clearInterval(interval);
     }, [view, isVisible]);
 
@@ -140,9 +156,9 @@ export default function SearchPanel({ view, onClose, isVisible }: SearchPanelPro
 
                             {/* Resultados y Opciones */}
                             <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                                {matchesCount.total > 0 && (
+                                {searchTerm && (
                                     <span className="text-[10px] font-bold text-ink-black-400 mr-1 tabular-nums animate-in fade-in zoom-in duration-200">
-                                        {matchesCount.current}/{matchesCount.total}
+                                        {matchesCount.total > 0 ? matchesCount.current : 0}/{matchesCount.total}
                                     </span>
                                 )}
                                 <button

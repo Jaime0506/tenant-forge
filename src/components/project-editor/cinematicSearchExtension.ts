@@ -41,30 +41,40 @@ export const cinematicSearchField = StateField.define<CinematicSearchState>({
         return defaultState;
     },
     update(value, tr) {
+        let { query, matches, activeIndex } = value;
+        let queryChanged = false;
+        let activeIndexChanged = false;
+
         for (let effect of tr.effects) {
             if (effect.is(setCinematicSearch)) {
-                const query = effect.value;
-                if (!query.search) return defaultState;
-
-                const matches = findMatches(tr.state.doc.toString(), query);
-                return {
-                    query,
-                    matches,
-                    activeIndex: matches.length > 0 ? 0 : -1,
-                };
-            }
-            if (effect.is(clearCinematicSearch)) {
+                query = effect.value;
+                queryChanged = true;
+            } else if (effect.is(setActiveMatchIndex)) {
+                activeIndex = effect.value;
+                activeIndexChanged = true;
+            } else if (effect.is(clearCinematicSearch)) {
                 return defaultState;
-            }
-            if (effect.is(setActiveMatchIndex)) {
-                return { ...value, activeIndex: effect.value };
             }
         }
 
-        // Si el documento cambia, recalculamos coincidencias
-        if (tr.docChanged && value.query.search) {
-            const matches = findMatches(tr.state.doc.toString(), value.query);
-            return { ...value, matches };
+        if (queryChanged || (tr.docChanged && query.search)) {
+            const text = tr.state.doc.toString();
+            matches = findMatches(text, query);
+
+            if (queryChanged) {
+                // Si la consulta cambió, vamos al primer match o a ninguno
+                activeIndex = matches.length > 0 ? 0 : -1;
+            } else {
+                // Si solo cambió el documento, intentamos mantener el índice si es válido
+                if (activeIndex >= matches.length) {
+                    activeIndex = matches.length > 0 ? matches.length - 1 : -1;
+                }
+            }
+            return { query, matches, activeIndex };
+        }
+
+        if (activeIndexChanged) {
+            return { query, matches, activeIndex };
         }
 
         return value;
