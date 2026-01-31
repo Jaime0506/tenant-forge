@@ -3,6 +3,7 @@ name: Production Release (Windows + macOS)
 on:
     push:
         branches: ["release"]
+    workflow_dispatch:
 
 permissions:
     contents: write
