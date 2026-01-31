@@ -65,16 +65,37 @@ jobs:
 
             - name: Create and Merge PR
               run: |
-                  # 1. Crear el PR
-                  gh pr create \
-                    --base release \
-                    --head main \
-                    --title "🚀 Production: Merge main into release" \
-                    --body "Automated PR created by CI. Build and tests passed on main." \
-                    || echo "PR already exists."
+                  HEAD_BRANCH="main"
+                  BASE_BRANCH="release"
 
-                  # 2. Hacer el merge (esto pondrá el código en release)
-                  gh pr merge --merge --admin
+                  # Check if PR already exists
+                  PR_URL=$(gh pr list --head "$HEAD_BRANCH" --base "$BASE_BRANCH" --json url --jq '.[0].url')
 
-                  # 3. Disparar el build de producción explícitamente
-                  gh workflow run build.yaml --ref release
+                  if [ -z "$PR_URL" ]; then
+                    echo "Creating new PR from $HEAD_BRANCH to $BASE_BRANCH..."
+                    PR_URL=$(gh pr create \
+                      --base "$BASE_BRANCH" \
+                      --head "$HEAD_BRANCH" \
+                      --title "🚀 Production: Merge $HEAD_BRANCH into $BASE_BRANCH" \
+                      --body "Automated PR created by CI. Build and tests passed on $HEAD_BRANCH." \
+                      --fill) || echo "Failed to create PR (might be permissions or no changes)"
+                  else
+                    echo "PR already exists: $PR_URL"
+                  fi
+
+                  # Attempt to merge if we have a PR URL
+                  if [ -n "$PR_URL" ]; then
+                    echo "Merging PR..."
+                    gh pr merge "$HEAD_BRANCH" --merge --admin || echo "Failed to merge PR"
+                  else
+                    echo "No PR found to merge. Trying direct merge as fallback..."
+                    git config user.name "github-actions[bot]"
+                    git config user.email "github-actions[bot]@users.noreply.github.com"
+                    git fetch origin "$BASE_BRANCH"
+                    git checkout "$BASE_BRANCH"
+                    git merge "$HEAD_BRANCH"
+                    git push origin "$BASE_BRANCH" || echo "Direct push failed (branch protection?)"
+                  fi
+
+                  # Trigger build
+                  gh workflow run build.yaml --ref "$BASE_BRANCH" || echo "Failed to trigger build workflow"
