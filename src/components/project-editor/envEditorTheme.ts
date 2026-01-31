@@ -169,4 +169,7 @@ export const getEnvTheme = (isDark: boolean) =>
         ".cm-activeLineGutter": {
             backgroundColor: "transparent",
         },
+        ".cm-searchPanel": {
+            display: "none !important",
+        },
     });

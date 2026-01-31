@@ -11,6 +11,9 @@ import { useState } from "react";
 import { useProjectService } from "@/hooks/useProjectService";
 import { toast } from "sonner";
 import ButtonCustom from "../ui-custom/ButtonCustom";
+import SearchPanel from "./SearchPanel";
+import { keymap } from "@codemirror/view";
+import { cinematicSearchField, cinematicSearchTheme } from "./cinematicSearchExtension";
 
 interface EnvEditorProps {
     value: string;
@@ -29,6 +32,8 @@ export default function EnvEditor({
 }: EnvEditorProps) {
     const isDark = useThemeDetector();
     const [isSaving, setIsSaving] = useState(false);
+    const [isSearchVisible, setIsSearchVisible] = useState(false);
+    const [editorView, setEditorView] = useState<EditorView | null>(null);
     const { saveProject } = useProjectService();
 
     // Crear extensiones dinámicamente según el tema
@@ -37,6 +42,17 @@ export default function EnvEditor({
         syntaxHighlighting(getEnvHighlightStyle(isDark)),
         getEnvTheme(isDark),
         EditorView.lineWrapping,
+        cinematicSearchField,
+        cinematicSearchTheme,
+        keymap.of([
+            {
+                key: "Mod-f",
+                run: () => {
+                    setIsSearchVisible(true);
+                    return true;
+                },
+            },
+        ]),
     ];
 
     /**
@@ -140,6 +156,7 @@ export default function EnvEditor({
                         onChange={onChange}
                         height="100%"
                         style={{ height: "100%" }}
+                        onCreateEditor={(view) => setEditorView(view)}
                         extensions={envExtensions}
                         basicSetup={{
                             lineNumbers: false,
@@ -151,9 +168,19 @@ export default function EnvEditor({
                             closeBrackets: false,
                             autocompletion: false,
                             highlightSelectionMatches: false,
+                            searchKeymap: false,
                         }}
                         placeholder="POSTGRES_TYPE_MY_CONNECTION = 'postgres'&#10;POSTGRES_HOST_MY_CONNECTION = 'localhost'&#10;POSTGRES_DB_MY_CONNECTION = 'database_name'&#10;POSTGRES_SCHEMA_MY_CONNECTION = 'public'&#10;POSTGRES_USER_MY_CONNECTION = 'username'&#10;POSTGRES_PASSWORD_MY_CONNECTION = 'password'&#10;POSTGRES_PORT_MY_CONNECTION = 5432&#10;&#10;POSTGRES_TYPE_ANOTHER_CONNECTION = 'postgres'&#10;POSTGRES_HOST_ANOTHER_CONNECTION = '192.168.1.100'&#10;POSTGRES_DB_ANOTHER_CONNECTION = 'another_db'&#10;POSTGRES_SCHEMA_ANOTHER_CONNECTION = 'schema_name'&#10;POSTGRES_USER_ANOTHER_CONNECTION = 'user2'&#10;POSTGRES_PASSWORD_ANOTHER_CONNECTION = 'pass2'&#10;POSTGRES_PORT_ANOTHER_CONNECTION = 5432"
                     />
+
+                    {editorView && (
+                        <SearchPanel
+                            view={editorView}
+                            isVisible={isSearchVisible}
+                            onClose={() => setIsSearchVisible(false)}
+                        />
+                    )}
+
                     <style>{`
                         .cm-editor,
                         .cm-content {
@@ -174,7 +201,7 @@ export default function EnvEditor({
             <div className="flex flex-row gap-2 p-3 border-t border-cerulean-500/10 bg-ink-black-900/60 backdrop-blur-md shrink-0">
                 <Button
                     onClick={handleConfirm}
-                    className="flex-1 gap-2.5 border border-cerulean-500/20 text-cerulean-300 hover:bg-cerulean-500/20 hover:text-white rounded-xl h-auto px-6 py-3 font-black uppercase tracking-widest text-xs transition-all cursor-pointer"
+                    className="flex-1 gap-2.5 bg-ink-black-900/40 backdrop-blur-md border border-cerulean-800/50 text-white hover:bg-ink-black-800 rounded-xl h-auto px-6 py-3 font-black uppercase tracking-widest text-xs transition-all cursor-pointer shadow-lg"
                     disabled={!value.trim()}
                 >
                     <Check className="size-4" />
@@ -183,7 +210,7 @@ export default function EnvEditor({
                 <ButtonCustom
                     isLoading={isSaving}
                     onClick={handleSave}
-                    className="flex-1 gap-2.5 bg-cerulean-600 hover:bg-cerulean-500 text-ink-black-950 font-black uppercase tracking-widest text-xs rounded-xl h-auto px-6 py-3 border-none shadow-[0_0_20px_rgba(8,191,247,0.3)] disabled:opacity-50 transition-all cursor-pointer"
+                    className="flex-1 gap-2.5 bg-ink-black-900 text-white font-black uppercase tracking-widest text-xs rounded-xl h-auto px-6 py-3 border border-cerulean-900/50 shadow-2xl hover:bg-ink-black-800 disabled:opacity-50 transition-all cursor-pointer"
                     disabled={!value.trim() || isSaving || !projectId}
                 >
                     <Save className="size-4" />

@@ -4,15 +4,16 @@ import { EditorView } from "@codemirror/view";
 import { Extension } from "@codemirror/state";
 import { sql, PostgreSQL } from "@codemirror/lang-sql";
 import { syntaxHighlighting } from "@codemirror/language";
-// import { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
 import { DatabaseConnection } from "./envParser";
 import { getSqlHighlightStyle, getSqlTheme } from "./sqlEditorTheme";
-// import { formatSql } from "./sqlUtils";
 import ConnectionsPanel from "./ConnectionsPanel";
 import SqlExecutionResults from "./SqlExecutionResults";
 import { useThemeDetector } from "@/hooks/useThemeDetector";
 import ButtonCustom from "../ui-custom/ButtonCustom";
+import SearchPanel from "./SearchPanel";
+import { keymap } from "@codemirror/view";
+import { cinematicSearchField, cinematicSearchTheme } from "./cinematicSearchExtension";
 
 interface ExecutionResult {
     connection_id: string;
@@ -41,6 +42,8 @@ export default function SqlEditor({
     const [selectedConnections, setSelectedConnections] = useState<Set<string>>(
         new Set()
     );
+    const [isSearchVisible, setIsSearchVisible] = useState(false);
+    const [editorView, setEditorView] = useState<EditorView | null>(null);
 
     // Seleccionar todas las conexiones cuando se reciben nuevas
     useEffect(() => {
@@ -78,6 +81,17 @@ export default function SqlEditor({
         syntaxHighlighting(getSqlHighlightStyle(isDark)),
         getSqlTheme(isDark),
         EditorView.lineWrapping,
+        cinematicSearchField,
+        cinematicSearchTheme,
+        keymap.of([
+            {
+                key: "Mod-f",
+                run: () => {
+                    setIsSearchVisible(true);
+                    return true;
+                },
+            },
+        ]),
     ];
 
     // const handleFormatSql = () => {
@@ -124,6 +138,7 @@ export default function SqlEditor({
                         onChange={onChange}
                         height="100%"
                         style={{ height: "100%" }}
+                        onCreateEditor={(view) => setEditorView(view)}
                         extensions={sqlExtensions}
                         basicSetup={{
                             lineNumbers: false,
@@ -135,9 +150,19 @@ export default function SqlEditor({
                             closeBrackets: true,
                             autocompletion: true,
                             highlightSelectionMatches: false,
+                            searchKeymap: false,
                         }}
                         placeholder="SELECT * FROM users WHERE id = 1;"
                     />
+
+                    {editorView && (
+                        <SearchPanel
+                            view={editorView}
+                            isVisible={isSearchVisible}
+                            onClose={() => setIsSearchVisible(false)}
+                        />
+                    )}
+
                     <style>{`
                         .cm-editor,
                         .cm-content {
