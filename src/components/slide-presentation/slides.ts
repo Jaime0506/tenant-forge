@@ -11,7 +11,6 @@ import {
     Filter,
     LayoutGrid,
     FileText,
-    Shield,
     ListChecks,
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";

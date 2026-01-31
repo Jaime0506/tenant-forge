@@ -48,7 +48,7 @@ export default function ProjectCreateForm({ onProjectCreated }: ProjectCreateFor
             <form onSubmit={onSubmit} className="flex flex-col gap-8 flex-1">
                 {/* Nombre del proyecto */}
                 <div className="flex flex-col gap-2.5 px-1">
-                    <label htmlFor="projectName" className="text-xs font-black text-cerulean-500 uppercase tracking-[0.2em]">
+                    <label htmlFor="projectName" className="text-xs font-black text-cerulean-100 uppercase tracking-[0.2em]">
                         Nombre del proyecto
                     </label>
                     <input
@@ -64,7 +64,7 @@ export default function ProjectCreateForm({ onProjectCreated }: ProjectCreateFor
 
                 {/* Descripción */}
                 <div className="flex flex-col gap-2.5 px-1">
-                    <label htmlFor="description" className="text-xs font-black text-cerulean-500 uppercase tracking-[0.2em]">
+                    <label htmlFor="description" className="text-xs font-black text-cerulean-100 uppercase tracking-[0.2em]">
                         Descripción <span className="text-ink-black-400 font-medium normal-case tracking-normal">(opcional)</span>
                     </label>
                     <textarea
@@ -79,7 +79,7 @@ export default function ProjectCreateForm({ onProjectCreated }: ProjectCreateFor
 
                 {/* Tags */}
                 <div className="flex flex-col gap-2.5 px-1">
-                    <label htmlFor="tags" className="text-xs font-black text-cerulean-500 uppercase tracking-[0.2em]">
+                    <label htmlFor="tags" className="text-xs font-black text-cerulean-100 uppercase tracking-[0.2em]">
                         Tags <span className="text-ink-black-400 font-medium normal-case tracking-normal">(opcional)</span>
                     </label>
                     <div className="flex gap-3">

@@ -1,7 +1,4 @@
-import { useNavigate } from "react-router";
-import { Button } from "../ui/button";
 import { useState, useEffect } from "react";
-import { ArrowLeft } from "lucide-react";
 import EnvEditor from "./EnvEditor";
 import SqlEditor from "./SqlEditor";
 import useStoreManagement from "@/hooks/useStoreManagement";
@@ -20,7 +17,6 @@ interface ProjectEditorProps {
 }
 
 export default function ProjectEditor({ id, project }: ProjectEditorProps) {
-    const navigate = useNavigate();
     const [envContent, setEnvContent] = useState("");
     const [sqlContent, setSqlContent] = useState("");
     const [shouldAnimateWarning, setShouldAnimateWarning] = useState(false);
@@ -88,29 +84,25 @@ export default function ProjectEditor({ id, project }: ProjectEditorProps) {
     }, [project.connections, handleEnvConfirm]);
 
     return (
-        <main className="flex w-full h-full rounded-lg border border-gray-200 dark:border-gray-800 flex-col gap-6 p-6 bg-card">
-            {/* Mini menú de navegación */}
-            <div className="flex items-center gap-4">
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate(-1)}
-                    className="gap-2"
-                >
-                    <ArrowLeft className="size-4" />
-                    Volver
-                </Button>
-                <h1 className="text-lg font-semibold text-foreground">
-                    {project.name}
-                </h1>
+        <main className="flex w-full h-full max-h-[90vh] rounded-2xl border border-cerulean-500/30 flex-col gap-6 p-6 sm:p-8 bg-ink-black-950/90 backdrop-blur-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden">
+            {/* Información del proyecto (Opcional, ya que el nombre está en el Tab) */}
+            <div className="flex items-center gap-3 mb-2">
+                <div className="flex flex-col">
+                    <span className="text-xs font-black text-cerulean-500 uppercase tracking-[0.2em] leading-none mb-1.5">
+                        Proyecto Activo
+                    </span>
+                    <h1 className="text-xl font-black text-white tracking-tighter leading-none">
+                        {project.name}
+                    </h1>
+                </div>
             </div>
 
             {/* Contenedor principal con dos columnas */}
             <div className="flex flex-1 min-h-0 gap-6">
                 {/* Columna izquierda - Editor .env */}
-                <div className="flex flex-col w-1/2 border border-border rounded-lg overflow-hidden">
-                    <div className="p-4 border-b border-border flex flex-row space-between items-center gap-2 shrink-0">
-                        <h2 className="text-sm font-medium text-foreground flex-1">
+                <div className="flex flex-col w-1/2 border border-cerulean-500/10 rounded-xl overflow-hidden bg-ink-black-950/40 backdrop-blur-sm">
+                    <div className="p-4 border-b border-cerulean-500/10 flex flex-row space-between items-center gap-2 shrink-0 bg-ink-black-900/40">
+                        <h2 className="text-xs font-black text-cerulean-500 uppercase tracking-[0.2em] flex-1">
                             Variables de Entorno (.env)
                         </h2>
                         {isEnvEditorWarningShown && (
@@ -128,9 +120,9 @@ export default function ProjectEditor({ id, project }: ProjectEditorProps) {
                 </div>
 
                 {/* Columna derecha - Editor SQL */}
-                <div className="flex flex-col w-1/2 border border-border rounded-lg overflow-hidden">
-                    <div className="p-4 border-b border-border shrink-0">
-                        <h2 className="text-sm font-medium text-foreground">
+                <div className="flex flex-col w-1/2 border border-cerulean-500/10 rounded-xl overflow-hidden bg-ink-black-950/40 backdrop-blur-sm">
+                    <div className="p-4 border-b border-cerulean-500/10 shrink-0 bg-ink-black-900/40">
+                        <h2 className="text-xs font-black text-cerulean-500 uppercase tracking-[0.2em]">
                             Editor SQL (PostgreSQL)
                         </h2>
                     </div>
