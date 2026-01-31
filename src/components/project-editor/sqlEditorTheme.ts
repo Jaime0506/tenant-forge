@@ -202,4 +202,7 @@ export const getSqlTheme = (isDark: boolean) =>
         ".cm-completionList": {
             maxHeight: "300px",
         },
+        ".cm-searchPanel": {
+            display: "none !important",
+        },
     });
