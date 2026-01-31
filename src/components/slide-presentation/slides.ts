@@ -1,116 +1,140 @@
 import {
-  Database,
-  Server,
-  Zap,
-  CheckCircle2,
-  Clock,
-  Shield,
-  Users,
-  Play,
+    Database,
+    Server,
+    Zap,
+    CheckCircle2,
+    Play,
+    Terminal,
+    Code2,
+    Table,
+    Activity,
+    Filter,
+    LayoutGrid,
+    FileText,
+    ListChecks,
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
 export interface SlideFeature {
-  icon: LucideIcon;
-  text: string;
+    icon: LucideIcon;
+    text: string;
 }
 
 export interface SlideContent {
-  main: string;
-  features: SlideFeature[];
+    main: string;
+    features: SlideFeature[];
 }
 
 export interface Slide {
-  id: number;
-  title: string;
-  subtitle?: string;
-  content: SlideContent;
+    id: number;
+    title: string;
+    subtitle?: string;
+    content: SlideContent;
 }
 
 export const slides: Slide[] = [
-  {
-    id: 1,
-    title: "¿Qué hace TenantForge?",
-    content: {
-      main: "TenantForge es una herramienta diseñada para simplificar las migraciones de bases de datos en entornos multi-tenant.",
-      features: [
-        {
-          icon: Database,
-          text: "Ejecuta el mismo script SQL en múltiples bases de datos",
+    {
+        id: 1,
+        title: "",
+        content: {
+            main: "",
+            features: [],
         },
-        {
-          icon: Server,
-          text: "Gestiona conexiones a diferentes servidores simultáneamente",
-        },
-        {
-          icon: Zap,
-          text: "Automatiza procesos de migración de forma sencilla",
-        },
-      ],
     },
-  },
-  {
-    id: 2,
-    title: "¿Qué más hace?",
-    content: {
-      main: "Más allá de las migraciones básicas, TenantForge ofrece capacidades avanzadas para tu equipo.",
-      features: [
-        {
-          icon: Clock,
-          text: "Programa migraciones para ejecutarse en horarios específicos",
+    {
+        id: 2,
+        title: "¿Qué hace TenantForge?",
+        content: {
+            main: "TenantForge es una plataforma potente para la ejecución de SQL simultánea en entornos multi-tenant.",
+            features: [
+                {
+                    icon: Database,
+                    text: "Ejecuta scripts SQL en todas tus bases de datos al mismo tiempo",
+                },
+                {
+                    icon: Server,
+                    text: "Gestiona conexiones a múltiples servidores de forma centralizada",
+                },
+                {
+                    icon: Zap,
+                    text: "Automatiza la creación de tablas, funciones y extensiones",
+                },
+            ],
         },
-        {
-          icon: Shield,
-          text: "Validación y rollback automático en caso de errores",
-        },
-        {
-          icon: Users,
-          text: "Gestión de permisos y auditoría de cambios",
-        },
-      ],
     },
-  },
-  {
-    id: 3,
-    title: "Ventajas",
-    content: {
-      main: "Descubre por qué TenantForge es la solución ideal para tu empresa.",
-      features: [
-        {
-          icon: CheckCircle2,
-          text: "Ahorra tiempo ejecutando migraciones en paralelo",
+    {
+        id: 3,
+        title: "¿Qué más hace?",
+        content: {
+            main: "TenantForge ofrece control total sobre operaciones DDL y lógica avanzada exclusivamente para PostgreSQL.",
+            features: [
+                {
+                    icon: Terminal,
+                    text: "DDL Completo: CREATE / ALTER / DROP de tablas, esquemas e índices",
+                },
+                {
+                    icon: Code2,
+                    text: "Lógica: Soporte total para PL/pgSQL, funciones y procedimientos",
+                },
+                {
+                    icon: Table,
+                    text: "Vistas: Gestión de Vistas Normales y Materializadas con REFRESH",
+                },
+                {
+                    icon: Activity,
+                    text: "DML: Ejecución controlada de INSERT, UPDATE y DELETE",
+                },
+                {
+                    icon: Filter,
+                    text: "SELECT Restringido: Solo en subconsultas, Joins, CTEs o Vistas",
+                },
+                {
+                    icon: CheckCircle2,
+                    text: "Extensiones: Soporte nativo para CREATE EXTENSION",
+                },
+            ],
         },
-        {
-          icon: CheckCircle2,
-          text: "Reduce errores humanos con procesos automatizados",
-        },
-        {
-          icon: CheckCircle2,
-          text: "Interfaz intuitiva diseñada para uso interno",
-        },
-      ],
     },
-  },
-  {
-    id: 4,
-    title: "¡Comienza ahora!",
-    content: {
-      main: "Estás listo para simplificar tus migraciones. Comienza a usar TenantForge hoy mismo.",
-      features: [
-        {
-          icon: Play,
-          text: "Configuración rápida y sencilla",
+    {
+        id: 4,
+        title: "Proyectos y Seguridad",
+        content: {
+            main: "Diseñado para manejar múltiples entornos con una arquitectura de acceso seguro.",
+            features: [
+                {
+                    icon: LayoutGrid,
+                    text: "Multi-Proyecto: Maneja múltiples proyectos y bases de datos al tiempo",
+                },
+                {
+                    icon: ListChecks,
+                    text: "Resumen: Detalle de cada operación ejecutada en cada una de las bases de datos",
+                },
+                {
+                    icon: Database,
+                    text: "Compatible exclusivamente (de momento) con PostgreSQL",
+                },
+            ],
         },
-        {
-          icon: Database,
-          text: "Conecta tus servidores en minutos",
-        },
-        {
-          icon: Zap,
-          text: "Ejecuta tu primera migración ahora",
-        },
-      ],
     },
-  },
+    {
+        id: 5,
+        title: "¡Comienza ahora!",
+        content: {
+            main: "Simplifica la gestión de tus bases de datos. Comienza a usar TenantForge hoy mismo.",
+            features: [
+                {
+                    icon: Play,
+                    text: "Configuración rápida proyectada por .env",
+                },
+                {
+                    icon: FileText,
+                    text: "Carga tu configuración y empieza a ejecutar SQL",
+                },
+                {
+                    icon: Zap,
+                    text: "Potencia tu flujo de trabajo ahora",
+                },
+            ],
+        },
+    },
 ];
-

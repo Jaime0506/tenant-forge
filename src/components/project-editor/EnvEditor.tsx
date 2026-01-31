@@ -11,11 +11,15 @@ import { useState } from "react";
 import { useProjectService } from "@/hooks/useProjectService";
 import { toast } from "sonner";
 import ButtonCustom from "../ui-custom/ButtonCustom";
+import SearchPanel from "./SearchPanel";
+import { keymap } from "@codemirror/view";
+import { cinematicSearchField, cinematicSearchTheme } from "./cinematicSearchExtension";
 
 interface EnvEditorProps {
     value: string;
     onChange: (value: string) => void;
     onConfirm?: (connections: DatabaseConnection[]) => void;
+    currentConnections?: DatabaseConnection[];
     projectId?: number;
     onSaveComplete?: () => void;
 }
@@ -24,11 +28,14 @@ export default function EnvEditor({
     value,
     onChange,
     onConfirm,
+    currentConnections = [],
     projectId,
     onSaveComplete,
 }: EnvEditorProps) {
     const isDark = useThemeDetector();
     const [isSaving, setIsSaving] = useState(false);
+    const [isSearchVisible, setIsSearchVisible] = useState(false);
+    const [editorView, setEditorView] = useState<EditorView | null>(null);
     const { saveProject } = useProjectService();
 
     // Crear extensiones dinámicamente según el tema
@@ -37,6 +44,17 @@ export default function EnvEditor({
         syntaxHighlighting(getEnvHighlightStyle(isDark)),
         getEnvTheme(isDark),
         EditorView.lineWrapping,
+        cinematicSearchField,
+        cinematicSearchTheme,
+        keymap.of([
+            {
+                key: "Mod-f",
+                run: () => {
+                    setIsSearchVisible(true);
+                    return true;
+                },
+            },
+        ]),
     ];
 
     /**
@@ -101,10 +119,19 @@ export default function EnvEditor({
                 return;
             }
 
-            // Limpiar las comillas de las conexiones
+            // Conservar displayName (y envKey) de las conexiones actuales al guardar
             const fixedConnections = connections.map((connection) => {
+                const match = currentConnections.find(
+                    (c) =>
+                        c.id === connection.id ||
+                        (c.envKey === connection.envKey &&
+                            c.host === connection.host &&
+                            c.port === connection.port)
+                );
                 const fixedConnection: DatabaseConnection = {
                     id: cleanQuotes(connection.id) || connection.id,
+                    envKey: connection.envKey ?? match?.envKey,
+                    displayName: match?.displayName,
                     type: cleanQuotes(connection.type),
                     host: cleanQuotes(connection.host),
                     db: cleanQuotes(connection.db),
@@ -113,7 +140,6 @@ export default function EnvEditor({
                     password: cleanQuotes(connection.password),
                     port: connection.port,
                 };
-
                 return fixedConnection;
             });
 
@@ -140,6 +166,7 @@ export default function EnvEditor({
                         onChange={onChange}
                         height="100%"
                         style={{ height: "100%" }}
+                        onCreateEditor={(view) => setEditorView(view)}
                         extensions={envExtensions}
                         basicSetup={{
                             lineNumbers: false,
@@ -151,9 +178,19 @@ export default function EnvEditor({
                             closeBrackets: false,
                             autocompletion: false,
                             highlightSelectionMatches: false,
+                            searchKeymap: false,
                         }}
                         placeholder="POSTGRES_TYPE_MY_CONNECTION = 'postgres'&#10;POSTGRES_HOST_MY_CONNECTION = 'localhost'&#10;POSTGRES_DB_MY_CONNECTION = 'database_name'&#10;POSTGRES_SCHEMA_MY_CONNECTION = 'public'&#10;POSTGRES_USER_MY_CONNECTION = 'username'&#10;POSTGRES_PASSWORD_MY_CONNECTION = 'password'&#10;POSTGRES_PORT_MY_CONNECTION = 5432&#10;&#10;POSTGRES_TYPE_ANOTHER_CONNECTION = 'postgres'&#10;POSTGRES_HOST_ANOTHER_CONNECTION = '192.168.1.100'&#10;POSTGRES_DB_ANOTHER_CONNECTION = 'another_db'&#10;POSTGRES_SCHEMA_ANOTHER_CONNECTION = 'schema_name'&#10;POSTGRES_USER_ANOTHER_CONNECTION = 'user2'&#10;POSTGRES_PASSWORD_ANOTHER_CONNECTION = 'pass2'&#10;POSTGRES_PORT_ANOTHER_CONNECTION = 5432"
                     />
+
+                    {editorView && (
+                        <SearchPanel
+                            view={editorView}
+                            isVisible={isSearchVisible}
+                            onClose={() => setIsSearchVisible(false)}
+                        />
+                    )}
+
                     <style>{`
                         .cm-editor,
                         .cm-content {
@@ -171,10 +208,10 @@ export default function EnvEditor({
             </div>
 
             {/* Botón Confirmar */}
-            <div className="flex flex-row gap-2 p-3 border-t border-border bg-muted/30 shrink-0">
+            <div className="flex flex-row gap-2 p-3 border-t border-cerulean-500/10 bg-ink-black-900/60 backdrop-blur-md shrink-0">
                 <Button
                     onClick={handleConfirm}
-                    className="w-full gap-2 flex-3"
+                    className="flex-1 gap-2.5 bg-ink-black-900/40 backdrop-blur-md border border-cerulean-800/50 text-white hover:bg-ink-black-800 rounded-xl h-auto px-6 py-3 font-black uppercase tracking-widest text-xs transition-all cursor-pointer shadow-lg"
                     disabled={!value.trim()}
                 >
                     <Check className="size-4" />
@@ -183,7 +220,7 @@ export default function EnvEditor({
                 <ButtonCustom
                     isLoading={isSaving}
                     onClick={handleSave}
-                    className="w-full gap-2 flex-1 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
+                    className="flex-1 gap-2.5 bg-ink-black-900 text-white font-black uppercase tracking-widest text-xs rounded-xl h-auto px-6 py-3 border border-cerulean-900/50 shadow-2xl hover:bg-ink-black-800 disabled:opacity-50 transition-all cursor-pointer"
                     disabled={!value.trim() || isSaving || !projectId}
                 >
                     <Save className="size-4" />

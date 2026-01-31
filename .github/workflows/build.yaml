@@ -1,13 +1,15 @@
-name: Tauri Build (Windows + macOS ARM)
+name: Production Release (Windows + macOS)
 
 on:
     push:
         branches: ["release"]
-    pull_request:
-        branches: ["release"]
+    workflow_dispatch:
+
+permissions:
+    contents: write
 
 jobs:
-    build:
+    publish:
         strategy:
             fail-fast: false
             matrix:
@@ -16,17 +18,14 @@ jobs:
         runs-on: ${{ matrix.os }}
 
         steps:
-            # 1️⃣ Código fuente
             - name: Checkout repository
               uses: actions/checkout@v4
 
-            # 2️⃣ Node.js (frontend)
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: 24
+                  node-version: 20
 
-            # 2.1️⃣ pnpm
             - name: Setup pnpm
               uses: pnpm/action-setup@v4
               with:
@@ -36,14 +35,12 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
-            # 3️⃣ Rust (Tauri backend)
             - name: Setup Rust
               uses: dtolnay/rust-toolchain@stable
 
             - name: Rust cache
               uses: swatinem/rust-cache@v2
 
-            # 4️⃣ Dependencias del sistema
             - name: macOS system dependencies
               if: runner.os == 'macOS'
               run: |
@@ -55,13 +52,14 @@ jobs:
               run: |
                   choco install llvm -y
 
-            # 5️⃣ Build Tauri
-            - name: Build Tauri app
-              run: pnpm tauri build
-
-            # 6️⃣ Subir binarios generados
-            - name: Upload artifacts
-              uses: actions/upload-artifact@v4
+            - name: Build and Publish
+              uses: tauri-apps/tauri-action@v0
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
-                  name: tauri-${{ runner.os }}
-                  path: src-tauri/target/release/bundle/**
+                  tagName: v__VERSION__ # Tauri action handles __VERSION__ from package.json
+                  releaseName: "App Release v__VERSION__"
+                  releaseBody: "Automated production release."
+                  releaseDraft: false
+                  prerelease: false
+                  args: ${{ runner.os == 'macos-latest' && '--target aarch64-apple-darwin' || '' }}
