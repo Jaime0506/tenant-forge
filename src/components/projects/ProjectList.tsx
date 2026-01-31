@@ -4,18 +4,23 @@ import { useNavigate } from "react-router";
 
 interface ProjectListProps {
     projects: ProjectData[];
+    onProjectClick?: (project: ProjectData) => void;
 }
 
-export default function ProjectList({ projects }: ProjectListProps) {
+export default function ProjectList({ projects, onProjectClick }: ProjectListProps) {
     const navigate = useNavigate();
 
     // Con el useLocation podemos acceder a los datos pasados en el navigate
-    const handleClick = (id: number, extraData: ProjectData) => {
-        navigate(`/project/${id}`, {
-            state: {
-                ...extraData
-            }
-        });
+    const handleClick = (project: ProjectData) => {
+        if (onProjectClick) {
+            onProjectClick(project);
+        } else {
+            navigate(`/project/${project.id}`, {
+                state: {
+                    ...project
+                }
+            });
+        }
     };
 
     return (
@@ -48,7 +53,7 @@ export default function ProjectList({ projects }: ProjectListProps) {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {projects.map((project) => (
-                        <ProjectCard key={project.id} project={project} onClick={(id) => handleClick(id, project)} />
+                        <ProjectCard key={project.id} project={project} onClick={() => handleClick(project)} />
                     ))}
                 </div>
             )}

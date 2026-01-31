@@ -1,24 +1,14 @@
-import { useLocation, useParams } from "react-router";
-import { AnimatedBackground } from "@/components/slide-presentation/AnimatedBackground";
-import ProjectEditor from "@/components/project-editor/ProjectEditor";
-import { motion } from "motion/react";
+import { useNavigate } from "react-router";
+import { useEffect } from "react";
 
 export default function ProjectEditorPage() {
-    const { id } = useParams();
-    const { state } = useLocation();
+    const navigate = useNavigate();
 
-    return (
-        <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="relative flex w-full h-screen bg-ink-black-50 dark:bg-ink-black-950 justify-center items-center overflow-hidden"
-        >
-            <AnimatedBackground />
-            <div className="relative z-10 w-full px-10 h-full flex items-center justify-center">
-                <ProjectEditor id={Number(id)} project={state} />
-            </div>
-        </motion.div>
-    );
+    useEffect(() => {
+        // Since we now use tabs in /main, this page is no longer the primary way to edit
+        // We'll redirect to /main with the intent to open this project if it's hit directly
+        navigate("/main", { replace: true });
+    }, [navigate]);
+
+    return null;
 }

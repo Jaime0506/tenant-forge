@@ -5,7 +5,11 @@ import { ProjectData } from "@/hooks/useProject";
 import { useProjectService } from "@/hooks/useProjectService";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
-export default function ProjectsView() {
+interface ProjectsViewProps {
+    onProjectClick?: (project: ProjectData) => void;
+}
+
+export default function ProjectsView({ onProjectClick }: ProjectsViewProps) {
     const { getProjects } = useProjectService();
     const [projects, setProjects] = useState<ProjectData[]>([]);
     const [accordionValue, setAccordionValue] = useState<string>("");
@@ -69,7 +73,7 @@ export default function ProjectsView() {
             </Accordion>
 
             <section className="flex flex-col gap-8 pt-8 border-t border-cerulean-800/20">
-                <ProjectList projects={projects} />
+                <ProjectList projects={projects} onProjectClick={onProjectClick} />
             </section>
         </main>
     )

@@ -24,11 +24,11 @@ export default function ConnectionChip({
                     type="button"
                     onClick={onSelect}
                     className={`
-                        inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium
+                        inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest
                         transition-all duration-200 cursor-pointer border
                         ${isSelected
-                            ? "bg-primary text-primary-foreground border-primary shadow-md"
-                            : "bg-secondary text-secondary-foreground border-border hover:bg-secondary/80"
+                            ? "bg-ink-black-900 text-white border-cerulean-500/40 shadow-xl"
+                            : "bg-ink-black-950/40 text-ink-black-400 border-white/5 hover:bg-ink-black-900/60 hover:text-ink-black-200"
                         }
                     `}
                 >

@@ -1,7 +1,4 @@
-import { useNavigate } from "react-router";
-import { Button } from "../ui/button";
 import { useState, useEffect } from "react";
-import { ArrowLeft } from "lucide-react";
 import EnvEditor from "./EnvEditor";
 import SqlEditor from "./SqlEditor";
 import useStoreManagement from "@/hooks/useStoreManagement";
@@ -20,7 +17,6 @@ interface ProjectEditorProps {
 }
 
 export default function ProjectEditor({ id, project }: ProjectEditorProps) {
-    const navigate = useNavigate();
     const [envContent, setEnvContent] = useState("");
     const [sqlContent, setSqlContent] = useState("");
     const [shouldAnimateWarning, setShouldAnimateWarning] = useState(false);
@@ -89,22 +85,13 @@ export default function ProjectEditor({ id, project }: ProjectEditorProps) {
 
     return (
         <main className="flex w-full h-full max-h-[90vh] rounded-2xl border border-cerulean-500/30 flex-col gap-6 p-6 sm:p-8 bg-ink-black-950/90 backdrop-blur-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden">
-            {/* Mini menú de navegación */}
-            <div className="flex items-center gap-6">
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate(-1)}
-                    className="gap-2 border border-cerulean-500/20 text-cerulean-300 hover:bg-cerulean-500/10 hover:text-white rounded-xl px-4 py-2 font-black uppercase tracking-widest text-[10px] transition-all"
-                >
-                    <ArrowLeft className="size-3" />
-                    Volver
-                </Button>
+            {/* Información del proyecto (Opcional, ya que el nombre está en el Tab) */}
+            <div className="flex items-center gap-3 mb-2">
                 <div className="flex flex-col">
                     <span className="text-[10px] font-black text-cerulean-500 uppercase tracking-[0.2em] leading-none mb-1">
-                        Proyecto
+                        Proyecto Activo
                     </span>
-                    <h1 className="text-2xl font-black text-white tracking-tighter leading-none">
+                    <h1 className="text-xl font-black text-white tracking-tighter leading-none">
                         {project.name}
                     </h1>
                 </div>

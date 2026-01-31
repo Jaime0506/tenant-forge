@@ -105,14 +105,14 @@ export default function SqlEditor({
             />
 
             {/* Barra de herramientas */}
-            <div className="flex items-center justify-end gap-2 p-2 border-b border-cerulean-500/10 bg-ink-black-900/60 backdrop-blur-md shrink-0">
+            <div className="flex items-center justify-end gap-2 p-2 border-b border-cerulean-500/10 bg-ink-black-950/40 backdrop-blur-md shrink-0">
                 <ButtonCustom
                     isLoading={isExecutingSql}
                     onClick={handleExecute}
-                    className="gap-2 bg-cerulean-600 hover:bg-cerulean-500 text-ink-black-950 font-black uppercase tracking-widest text-[10px] rounded-xl h-auto px-6 py-2.5 border-none shadow-[0_0_20px_rgba(8,191,247,0.3)] disabled:opacity-50 transition-all"
+                    className="group relative gap-2.5 bg-ink-black-900 hover:bg-ink-black-800 text-white font-black uppercase tracking-[0.15em] text-[10px] rounded-xl h-auto px-6 py-2.5 border border-cerulean-900/50 shadow-2xl transition-all duration-200 cursor-pointer overflow-hidden"
                 >
-                    <Play className="size-3 fill-current" />
-                    Ejecutar
+                    <Play className="size-3.5 fill-current" />
+                    Ejecutar SQL
                 </ButtonCustom>
             </div>
 
