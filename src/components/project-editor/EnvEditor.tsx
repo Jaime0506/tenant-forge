@@ -171,22 +171,22 @@ export default function EnvEditor({
             </div>
 
             {/* Botón Confirmar */}
-            <div className="flex flex-row gap-2 p-3 border-t border-border bg-muted/30 shrink-0">
+            <div className="flex flex-row gap-2 p-3 border-t border-cerulean-500/10 bg-ink-black-900/60 backdrop-blur-md shrink-0">
                 <Button
                     onClick={handleConfirm}
-                    className="w-full gap-2 flex-3"
+                    className="flex-1 gap-2 border border-cerulean-500/20 text-cerulean-300 hover:bg-cerulean-500/20 hover:text-white rounded-xl h-auto px-6 py-3 font-black uppercase tracking-widest text-[10px] transition-all"
                     disabled={!value.trim()}
                 >
-                    <Check className="size-4" />
+                    <Check className="size-3" />
                     Confirmar
                 </Button>
                 <ButtonCustom
                     isLoading={isSaving}
                     onClick={handleSave}
-                    className="w-full gap-2 flex-1 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
+                    className="flex-1 gap-2 bg-cerulean-600 hover:bg-cerulean-500 text-ink-black-950 font-black uppercase tracking-widest text-[10px] rounded-xl h-auto px-6 py-3 border-none shadow-[0_0_20px_rgba(8,191,247,0.3)] disabled:opacity-50 transition-all"
                     disabled={!value.trim() || isSaving || !projectId}
                 >
-                    <Save className="size-4" />
+                    <Save className="size-3" />
                     Guardar
                 </ButtonCustom>
             </div>

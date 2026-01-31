@@ -22,11 +22,11 @@ export default function ConnectionsPanel({
     }
 
     return (
-        <div className="p-3 border-b border-border bg-muted/20 shrink-0">
+        <div className="p-3 border-b border-cerulean-500/10 bg-ink-black-950/20 backdrop-blur-sm shrink-0">
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                    <Database className="size-4 text-muted-foreground" />
-                    <span className="text-xs font-medium text-muted-foreground">
+                    <Database className="size-3 text-cerulean-500" />
+                    <span className="text-[10px] font-black text-cerulean-500 uppercase tracking-[0.2em]">
                         Conexiones: {selectedConnections.size} de{" "}
                         {connections.length} seleccionadas
                     </span>
@@ -35,15 +35,15 @@ export default function ConnectionsPanel({
                     <button
                         type="button"
                         onClick={onSelectAll}
-                        className="text-xs text-primary hover:underline px-2 py-1"
+                        className="text-[10px] font-black text-cerulean-400 hover:text-white uppercase tracking-widest px-2 py-1 transition-colors"
                     >
                         Todas
                     </button>
-                    <span className="text-muted-foreground">|</span>
+                    <span className="text-cerulean-900">|</span>
                     <button
                         type="button"
                         onClick={onSelectNone}
-                        className="text-xs text-primary hover:underline px-2 py-1"
+                        className="text-[10px] font-black text-cerulean-400 hover:text-white uppercase tracking-widest px-2 py-1 transition-colors"
                     >
                         Ninguna
                     </button>

@@ -18,9 +18,6 @@ export default function ProjectList({ projects }: ProjectListProps) {
         });
     };
 
-    // Ejemplo de uso: 
-    // handleClick(project.id, { name: project.name, tags: project.tags });
-
     return (
         <div className="flex w-full flex-col gap-6">
             <div className="flex flex-col gap-3">
@@ -32,7 +29,7 @@ export default function ProjectList({ projects }: ProjectListProps) {
                     <p className="text-sm font-bold text-ink-black-300 uppercase tracking-wider">
                         {projects.length === 0
                             ? "Sin proyectos"
-                            : `${projects.length} ${projects.length === 1 ? 'proyecto' : 'proyectos'} activos`}
+                            : `Todos los proyectos`}
                     </p>
                 </div>
             </div>
