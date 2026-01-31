@@ -1,5 +1,6 @@
 import { CheckCircle2, XCircle } from "lucide-react";
 import ExecutionResultChip from "./ExecutionResultChip";
+import type { DatabaseConnection } from "./envParser";
 
 interface ExecutionResult {
     connection_id: string;
@@ -7,12 +8,18 @@ interface ExecutionResult {
     message: string;
 }
 
+function connectionDisplayLabel(conn: DatabaseConnection): string {
+    return conn.displayName || conn.db || conn.id || "";
+}
+
 interface SqlExecutionResultsProps {
     results: ExecutionResult[] | null;
+    connections?: DatabaseConnection[];
 }
 
 export default function SqlExecutionResults({
     results,
+    connections = [],
 }: SqlExecutionResultsProps) {
     if (!results || results.length === 0) {
         return null;
@@ -40,14 +47,23 @@ export default function SqlExecutionResults({
                 </div>
             </div>
             <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto custom-scrollbar pt-1 pb-2">
-                {results.map((result, index) => (
-                    <ExecutionResultChip
-                        key={`${result.connection_id}-${index}`}
-                        connectionId={result.connection_id}
-                        success={result.success}
-                        message={result.message}
-                    />
-                ))}
+                {results.map((result, index) => {
+                    const conn = connections.find(
+                        (c) => c.id === result.connection_id
+                    );
+                    const displayName = conn
+                        ? connectionDisplayLabel(conn)
+                        : undefined;
+                    return (
+                        <ExecutionResultChip
+                            key={`${result.connection_id}-${index}`}
+                            connectionId={result.connection_id}
+                            displayName={displayName}
+                            success={result.success}
+                            message={result.message}
+                        />
+                    );
+                })}
             </div>
         </div>
     );

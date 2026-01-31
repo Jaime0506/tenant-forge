@@ -11,6 +11,20 @@ import {
     serializeEnvConnections,
 } from "./envParser";
 
+function normalizeConnections(
+    list: DatabaseConnection[]
+): DatabaseConnection[] {
+    return list
+        .filter((c): c is DatabaseConnection => c != null && typeof c === "object")
+        .map((c, i) => {
+            const id =
+                c.id != null && String(c.id).trim() !== ""
+                    ? String(c.id).trim()
+                    : (c.envKey ?? `connection_${i + 1}`);
+            return { ...c, id };
+        });
+}
+
 interface ProjectEditorProps {
     id: number;
     project: ProjectData;
@@ -21,18 +35,24 @@ export default function ProjectEditor({ id, project }: ProjectEditorProps) {
     const [sqlContent, setSqlContent] = useState("");
     const [shouldAnimateWarning, setShouldAnimateWarning] = useState(false);
 
-    console.log("projectEditor", project);
-
     const { isEnvEditorWarningShown } = useStoreManagement();
 
-    // Hook para manejar toda la lógica de conexiones
     const {
         connections,
         isExecutingSql,
         executionResults,
         handleEnvConfirm,
+        updateConnectionDisplayName,
         executeSql,
     } = useProjectConnections();
+
+    if (!project) {
+        return (
+            <main className="flex w-full h-full items-center justify-center rounded-2xl border border-cerulean-500/30 p-6 bg-ink-black-950/90">
+                <p className="text-sm text-ink-black-400">Proyecto no disponible</p>
+            </main>
+        );
+    }
 
     const handleExecuteSql = async (selectedConnections: DatabaseConnection[]) => {
         await executeSql(sqlContent, selectedConnections);
@@ -47,39 +67,31 @@ export default function ProjectEditor({ id, project }: ProjectEditorProps) {
 
     // Cargar connections guardadas en el proyecto al montar el componente
     useEffect(() => {
-        if (project.connections && project.connections.trim() !== "") {
-            let connectionsToLoad: DatabaseConnection[] = [];
-            let displayContent = project.connections;
-
-            // Intentar parsear como JSON si parece una lista
-            if (project.connections.trim().startsWith("[")) {
-                try {
-                    const parsed = JSON.parse(project.connections);
-                    if (Array.isArray(parsed)) {
-                        connectionsToLoad = parsed;
-                        displayContent = serializeEnvConnections(parsed);
-                    }
-                } catch (e) {
-                    // Si falla el parseo JSON, lo dejamos como está para intentar parsearlo como .env
-                    console.error(
-                        "Error parseando conexiones JSON, intentando como .env:",
-                        e
-                    );
+        const raw = project?.connections;
+        if (raw == null || typeof raw !== "string" || raw.trim() === "") {
+            return;
+        }
+        let connectionsToLoad: DatabaseConnection[] = [];
+        let displayContent = raw;
+        try {
+            if (raw.trim().startsWith("[")) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) {
+                    connectionsToLoad = normalizeConnections(parsed);
+                    displayContent = serializeEnvConnections(connectionsToLoad);
                 }
             }
-
-            // Si no se han cargado conexiones (porque no era JSON o falló), intentar parsear como .env
             if (connectionsToLoad.length === 0) {
-                connectionsToLoad = getUniqueConnections(project.connections);
+                connectionsToLoad = getUniqueConnections(raw);
+                connectionsToLoad = normalizeConnections(connectionsToLoad);
             }
-
-            // Cargar el contenido (serializado si era JSON) en el editor .env
             setEnvContent(displayContent);
-
-            // Cargar las conexiones automáticamente en el panel
             if (connectionsToLoad.length > 0) {
                 handleEnvConfirm(connectionsToLoad);
             }
+        } catch (e) {
+            console.error("Error cargando conexiones del proyecto:", e);
+            setEnvContent(raw);
         }
     }, [project.connections, handleEnvConfirm]);
 
@@ -114,6 +126,7 @@ export default function ProjectEditor({ id, project }: ProjectEditorProps) {
                             value={envContent}
                             onChange={setEnvContent}
                             onConfirm={handleEnvConfirm}
+                            currentConnections={connections}
                             projectId={id}
                         />
                     </div>
@@ -132,6 +145,7 @@ export default function ProjectEditor({ id, project }: ProjectEditorProps) {
                             onChange={setSqlContent}
                             connections={connections}
                             onExecute={handleExecuteSql}
+                            onRenameConnection={updateConnectionDisplayName}
                             isExecutingSql={isExecutingSql}
                             executionResults={executionResults}
                         />

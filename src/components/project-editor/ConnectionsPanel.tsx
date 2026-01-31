@@ -8,6 +8,7 @@ interface ConnectionsPanelProps {
     onToggleConnection: (connectionId: string) => void;
     onSelectAll: () => void;
     onSelectNone: () => void;
+    onRename?: (connectionId: string, displayName: string) => void;
 }
 
 export default function ConnectionsPanel({
@@ -16,6 +17,7 @@ export default function ConnectionsPanel({
     onToggleConnection,
     onSelectAll,
     onSelectNone,
+    onRename,
 }: ConnectionsPanelProps) {
     if (connections.length === 0) {
         return null;
@@ -56,6 +58,7 @@ export default function ConnectionsPanel({
                         connection={conn}
                         isSelected={selectedConnections.has(conn.id)}
                         onSelect={() => onToggleConnection(conn.id)}
+                        onRename={onRename}
                     />
                 ))}
             </div>
