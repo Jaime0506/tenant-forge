@@ -8,7 +8,7 @@ import { Database, Check, Pencil } from "lucide-react";
 import { DatabaseConnection } from "./envParser";
 
 function connectionLabel(conn: DatabaseConnection): string {
-    return conn.displayName || conn.db || conn.id || "";
+    return conn.displayName || conn.id || conn.db || "";
 }
 
 interface ConnectionChipProps {

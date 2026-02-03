@@ -57,16 +57,46 @@ export const useProjectConnections = () => {
         (detectedConnections: DatabaseConnection[]) => {
             setConnections((prev) => {
                 if (prev.length === 0) return detectedConnections;
+                const usedPrevIds = new Set<string>();
+
                 return detectedConnections.map((detected) => {
-                    const match = prev.find(
-                        (p) =>
-                            p.id === detected.id ||
-                            (p.envKey === detected.envKey &&
-                                p.host === detected.host &&
-                                p.port === detected.port)
+                    // Start with no match
+                    let match: DatabaseConnection | undefined;
+
+                    // 1. Exact ID match (highest priority, strictly valid)
+                    match = prev.find(
+                        (p) => !usedPrevIds.has(p.id) && p.id === detected.id
                     );
-                    if (!match?.displayName) return detected;
-                    return { ...detected, displayName: match.displayName };
+
+                    // 2. Exact config match (same EnvKey + Host + Port)
+                    // Useful if ID changed but config is identical
+                    if (!match && detected.envKey) {
+                        match = prev.find(
+                            (p) =>
+                                !usedPrevIds.has(p.id) &&
+                                p.envKey === detected.envKey &&
+                                p.host === detected.host &&
+                                p.port === detected.port
+                        );
+                    }
+
+                    // 3. EnvKey match (fallback)
+                    // Useful if just port/host changed but it's the "same" logical connection in .env
+                    if (!match && detected.envKey) {
+                        match = prev.find(
+                            (p) =>
+                                !usedPrevIds.has(p.id) &&
+                                p.envKey === detected.envKey
+                        );
+                    }
+
+                    if (match) {
+                        usedPrevIds.add(match.id);
+                        if (match.displayName) {
+                            return { ...detected, displayName: match.displayName };
+                        }
+                    }
+                    return detected;
                 });
             });
         },
