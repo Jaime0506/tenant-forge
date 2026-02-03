@@ -4,6 +4,8 @@ import { Bug, X, Home, Layout, FileEdit, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 
+import useStoreManagement from "@/hooks/useStoreManagement";
+
 const ROUTES = [
     { name: "Presentación", path: "/", icon: Home },
     { name: "Main / Projects", path: "/main", icon: Layout },
@@ -13,8 +15,10 @@ const ROUTES = [
 export default function DebugMenu() {
     const [isOpen, setIsOpen] = useState(false);
     const navigate = useNavigate();
-    // Solo renderizar en desarrollo
-    if (!import.meta.env.DEV) return null;
+    const { isDebugModeEnabled } = useStoreManagement();
+
+    // Solo renderizar si estamos en dev o si el modo debug está activado manualmente
+    if (!import.meta.env.DEV && !isDebugModeEnabled) return null;
 
     return (
         <div className="fixed bottom-6 right-6 z-9999 flex flex-col items-end gap-3">

@@ -21,6 +21,17 @@ export default function useStoreManagement() {
         }
     };
 
+    const [isDebugModeEnabled, setIsDebugModeEnabled] = useState<boolean>(false);
+
+    const getIsDebugModeEnabled = async () => {
+        try {
+            const isEnabled = await storeManagement.get<boolean>("isDebugModeEnabled");
+            setIsDebugModeEnabled(isEnabled ?? false);
+        } catch (error) {
+            console.error("Error getting isDebugModeEnabled:", error);
+        }
+    };
+
     const getTheme = async () => {
         try {
             const theme = await storeManagement.get<string>("theme");
@@ -75,10 +86,21 @@ export default function useStoreManagement() {
         }
     };
 
+    const setIsDebugModeEnabledInStore = async (enabled: boolean) => {
+        try {
+            await storeManagement.set("isDebugModeEnabled", enabled);
+            setIsDebugModeEnabled(enabled);
+        } catch (error) {
+            console.error("Error setting isDebugModeEnabled:", error);
+            throw error;
+        }
+    };
+
     const getInitialData = async () => {
         await getTheme();
         await getIsFirstTime();
         await getIsEnvEditorWarningShown();
+        await getIsDebugModeEnabled();
     };
 
     useEffect(() => {
@@ -89,10 +111,12 @@ export default function useStoreManagement() {
         theme,
         isFirstTime,
         isEnvEditorWarningShown,
+        isDebugModeEnabled,
         methods: {
             setThemeInStore,
             setIsFirstTimeInStore,
             setIsEnvEditorWarningShownInStore,
+            setIsDebugModeEnabledInStore,
         },
     };
 }
