@@ -119,15 +119,41 @@ export default function EnvEditor({
                 return;
             }
 
+            // Track used connections to prevent duplicate matching
+            const usedConnectionIds = new Set<string>();
+
             // Conservar displayName (y envKey) de las conexiones actuales al guardar
             const fixedConnections = connections.map((connection) => {
-                const match = currentConnections.find(
-                    (c) =>
-                        c.id === connection.id ||
-                        (c.envKey === connection.envKey &&
-                            c.host === connection.host &&
-                            c.port === connection.port)
+                let match: DatabaseConnection | undefined;
+
+                // 1. Exact ID match
+                match = currentConnections.find(
+                    (c) => !usedConnectionIds.has(c.id) && c.id === connection.id
                 );
+
+                // 2. Exact config match
+                if (!match && connection.envKey) {
+                    match = currentConnections.find(
+                        (c) =>
+                            !usedConnectionIds.has(c.id) &&
+                            c.envKey === connection.envKey &&
+                            c.host === connection.host &&
+                            c.port === connection.port
+                    );
+                }
+
+                // 3. EnvKey match
+                if (!match && connection.envKey) {
+                    match = currentConnections.find(
+                        (c) =>
+                            !usedConnectionIds.has(c.id) &&
+                            c.envKey === connection.envKey
+                    );
+                }
+
+                if (match) {
+                    usedConnectionIds.add(match.id);
+                }
                 const fixedConnection: DatabaseConnection = {
                     id: cleanQuotes(connection.id) || connection.id,
                     envKey: connection.envKey ?? match?.envKey,
