@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { DatabaseConnection } from "@/components/project-editor/envParser";
 
 interface ExecutionResult {
@@ -153,14 +154,28 @@ export const useProjectConnections = () => {
 
         try {
             setIsExecutingSql(true);
-            setExecutionResults(null); // Limpiar resultados anteriores
+            setExecutionResults([]); // Inicializar vacío para empezar a pintar progresivamente
+
+            // Escuchar el progreso individual de cada conexión
+            const unlisten = await listen<ExecutionResult>(
+                "sql-execution-progress",
+                (event) => {
+                    setExecutionResults((prev) => {
+                        const currentResults = prev || [];
+                        return [...currentResults, event.payload];
+                    });
+                }
+            );
 
             const results = await invoke<ExecutionResult[]>("execute_sql", {
                 sql,
                 connections: fixedConnections,
             });
 
-            // Guardar resultados para mostrar en el componente
+            // Dejar de escuchar el progreso una vez que ha finalizado el invoke global
+            unlisten();
+
+            // Guardar resultados finales por seguridad (garantiza tener todos)
             setExecutionResults(results);
 
             results.forEach((result) => {
