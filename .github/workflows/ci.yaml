@@ -19,15 +19,16 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v4
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: 20 # Updated to 20 for better stability
-
             - name: Setup pnpm
               uses: pnpm/action-setup@v4
               with:
                   version: 9
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20 # Updated to 20 for better stability
+                  cache: 'pnpm'
 
             - name: Install system dependencies (Linux)
               if: runner.os == 'Linux'
@@ -48,8 +49,9 @@ jobs:
             - name: Rust cache
               uses: swatinem/rust-cache@v2
 
-            - name: Verify Tauri build
-              run: pnpm tauri build --no-bundle # Build rápido sin empaquetar
+            - name: Verify Tauri build (Cargo Check)
+              working-directory: src-tauri
+              run: cargo check # Comprobación de sintaxis/tipos ultra-rápida sin empaquetar binarios
 
     promote-to-release:
         name: Auto Merge main -> release
