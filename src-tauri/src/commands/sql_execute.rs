@@ -1,5 +1,8 @@
 use serde::{Deserialize, Serialize};
 use tokio_postgres::NoTls;
+use futures::stream::{self, StreamExt};
+use std::sync::Arc;
+use tauri::Emitter;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DatabaseConnection {
@@ -14,7 +17,7 @@ pub struct DatabaseConnection {
     pub port: Option<u16>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ExecutionResult {
     pub connection_id: String,
     pub success: bool,
@@ -58,10 +61,11 @@ async fn execute_on_connection(
         }
     };
 
-    // Conectar a la base de datos
-    let (mut client, connection) = match tokio_postgres::connect(&connection_string, NoTls).await {
-        Ok((c, conn)) => (c, conn),
-        Err(e) => {
+    // Conectar a la base de datos con un timeout de 10 segundos
+    let connect_future = tokio_postgres::connect(&connection_string, NoTls);
+    let (mut client, connection) = match tokio::time::timeout(std::time::Duration::from_secs(10), connect_future).await {
+        Ok(Ok((c, conn))) => (c, conn),
+        Ok(Err(e)) => {
             // Obtener detalles más específicos del error de conexión
             let error_msg = if e.to_string().contains("password authentication failed") {
                 format!("Error de autenticación: Usuario o contraseña incorrectos")
@@ -73,6 +77,16 @@ async fn execute_on_connection(
                 format!("Error conectando a la base de datos: {}", e)
             };
             
+            println!("[{}] {}", connection_id, error_msg);
+            return Err(ExecutionResult {
+                connection_id: connection_id.clone(),
+                success: false,
+                message: error_msg,
+            });
+        }
+        Err(_) => {
+            // Error de Timeout
+            let error_msg = format!("Error de conexión: Tiempo de espera agotado (Timeout > 10s)");
             println!("[{}] {}", connection_id, error_msg);
             return Err(ExecutionResult {
                 connection_id: connection_id.clone(),
@@ -272,28 +286,44 @@ async fn execute_on_connection(
 
 #[tauri::command]
 pub async fn execute_sql(
+    app: tauri::AppHandle,
     sql: String,
     connections: Vec<DatabaseConnection>,
 ) -> Result<Vec<ExecutionResult>, String> {
-    println!("=== Iniciando ejecución de SQL ===");
+    println!("=== Iniciando ejecución de SQL (Concurrente) ===");
     println!("SQL: {}", sql);
     println!("Número de conexiones: {}", connections.len());
     println!();
 
-    let mut results = Vec::new();
+    let concurrency_limit = 50; // Limite seguro para evitar saturación
 
-    // Ejecutar SQL en cada conexión
-    for conn in connections {
-        match execute_on_connection(&conn, &sql).await {
-            Ok(result) => {
-                results.push(result);
+    // Compartir el string SQL entre todas las tareas usando Arc
+    let sql_arc = Arc::new(sql);
+
+    // Convertir a stream, mapear a tareas asíncronas, y ejecutar concurrentemente
+    let results: Vec<ExecutionResult> = stream::iter(connections.into_iter())
+        .map(|conn| {
+            let sql_clone = Arc::clone(&sql_arc);
+            let app_clone = app.clone(); // Clonar el handle para usarlo dentro de la tarea
+            async move {
+                // execute_on_connection espera referencias
+                let res = match execute_on_connection(&conn, &sql_clone).await {
+                    Ok(result) => result,
+                    Err(result) => result,
+                };
+                
+                // Emitir el evento al frontend indicando que esta conexión terminó
+                if let Err(e) = app_clone.emit("sql-execution-progress", &res) {
+                    eprintln!("Error al emitir el evento de progreso: {}", e);
+                }
+
+                println!(); // Línea en blanco para separar outputs (aunque puede estar intercalado en concurrencia)
+                res
             }
-            Err(result) => {
-                results.push(result);
-            }
-        }
-        println!(); // Línea en blanco entre ejecuciones
-    }
+        })
+        .buffer_unordered(concurrency_limit)
+        .collect()
+        .await;
 
     // Resumen
     let successful = results.iter().filter(|r| r.success).count();

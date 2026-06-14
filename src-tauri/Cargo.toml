@@ -26,4 +26,4 @@ tauri-plugin-store = "2.4.1"
 rusqlite = { version = "0.37", features = ["bundled"] }
 tokio = { version = "1", features = ["full"] }
 tokio-postgres = "0.7"
-
+futures = "0.3"
