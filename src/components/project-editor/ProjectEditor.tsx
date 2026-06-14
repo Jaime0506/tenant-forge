@@ -11,18 +11,48 @@ import {
     serializeEnvConnections,
 } from "./envParser";
 
+/**
+ * Asigna id válido y desambigua duplicados usando host + puerto
+ * para que cada conexión sea identificable y seleccionable por separado.
+ */
 function normalizeConnections(
     list: DatabaseConnection[]
 ): DatabaseConnection[] {
-    return list
-        .filter((c): c is DatabaseConnection => c != null && typeof c === "object")
-        .map((c, i) => {
-            const id =
-                c.id != null && String(c.id).trim() !== ""
-                    ? String(c.id).trim()
-                    : (c.envKey ?? `connection_${i + 1}`);
-            return { ...c, id };
-        });
+    const filtered = list.filter(
+        (c): c is DatabaseConnection => c != null && typeof c === "object"
+    );
+    const withId = filtered.map((c, i) => {
+        const id =
+            c.id != null && String(c.id).trim() !== ""
+                ? String(c.id).trim()
+                : (c.envKey ?? `connection_${i + 1}`);
+        return { ...c, id };
+    });
+
+    const idCount = new Map<string, number>();
+    for (const c of withId) {
+        idCount.set(c.id, (idCount.get(c.id) ?? 0) + 1);
+    }
+    const usedIds = new Set<string>();
+    return withId.map((conn) => {
+        if ((idCount.get(conn.id) ?? 0) <= 1) {
+            usedIds.add(conn.id);
+            return conn;
+        }
+        let candidate = conn.id;
+        if (conn.port != null) candidate = `${conn.id}_${conn.port}`;
+        if (usedIds.has(candidate) && (conn.host || conn.port != null)) {
+            const hostPart = String(conn.host ?? "host").replace(/\./g, "_");
+            candidate = `${conn.id}_${hostPart}_${conn.port ?? ""}`;
+        }
+        let suffix = 0;
+        while (usedIds.has(candidate)) {
+            suffix++;
+            candidate = `${conn.id}_${suffix}`;
+        }
+        usedIds.add(candidate);
+        return { ...conn, id: candidate };
+    });
 }
 
 interface ProjectEditorProps {
@@ -93,7 +123,7 @@ export default function ProjectEditor({ id, project }: ProjectEditorProps) {
             console.error("Error cargando conexiones del proyecto:", e);
             setEnvContent(raw);
         }
-    }, [project.connections, handleEnvConfirm]);
+    }, [project?.id, project?.connections, handleEnvConfirm]);
 
     return (
         <main className="flex w-full h-full max-h-[90vh] rounded-2xl border border-cerulean-500/30 flex-col gap-6 p-6 sm:p-8 bg-ink-black-950/90 backdrop-blur-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden">
