@@ -23,7 +23,6 @@ export default function EnvEditor({
     value,
     onChange,
     onConfirm,
-    currentConnections = [],
 }: EnvEditorProps) {
     const isDark = useThemeDetector();
     const [isSearchVisible, setIsSearchVisible] = useState(false);
@@ -48,39 +47,39 @@ export default function EnvEditor({
         ]),
     ];
 
-    /**
-     * Limpia todas las comillas (simples y dobles, normales y Unicode) de un string
-     * Maneja casos con comillas anidadas o múltiples capas
-     */
-    const cleanQuotes = (value: string | undefined): string | undefined => {
-        if (!value) return value;
-
-        let cleaned = value.trim();
-        let iterations = 0;
-        const maxIterations = 10; // Límite de seguridad
-
-        // Iterar hasta que no haya más cambios (elimina comillas anidadas)
-        while (iterations < maxIterations) {
-            const before = cleaned;
-
-            // Eliminar todas las variantes de comillas simples del inicio y final
-            // Incluye: ' (normal), ' (left single), ' (right single)
-            cleaned = cleaned.replace(/^['''']+/g, "").replace(/['''']+$/g, "");
-
-            // Eliminar todas las variantes de comillas dobles del inicio y final
-            // Incluye: " (normal), " (left double), " (right double)
-            cleaned = cleaned.replace(/^[""""]+/g, "").replace(/[""""]+$/g, "");
-
-            // Si no hubo cambios, salir
-            if (before === cleaned) {
-                break;
-            }
-
-            iterations++;
-        }
-
-        return cleaned.trim();
-    };
+    // /**
+    //  * Limpia todas las comillas (simples y dobles, normales y Unicode) de un string
+    //  * Maneja casos con comillas anidadas o múltiples capas
+    //  */
+    // const cleanQuotes = (value: string | undefined): string | undefined => {
+    //     if (!value) return value;
+    //
+    //     let cleaned = value.trim();
+    //     let iterations = 0;
+    //     const maxIterations = 10; // Límite de seguridad
+    //
+    //     // Iterar hasta que no haya más cambios (elimina comillas anidadas)
+    //     while (iterations < maxIterations) {
+    //         const before = cleaned;
+    //
+    //         // Eliminar todas las variantes de comillas simples del inicio y final
+    //         // Incluye: ' (normal), ' (left single), ' (right single)
+    //         cleaned = cleaned.replace(/^['''']+/g, "").replace(/['''']+$/g, "");
+    //
+    //         // Eliminar todas las variantes de comillas dobles del inicio y final
+    //         // Incluye: " (normal), " (left double), " (right double)
+    //         cleaned = cleaned.replace(/^[""""]+/g, "").replace(/[""""]+$/g, "");
+    //
+    //         // Si no hubo cambios, salir
+    //         if (before === cleaned) {
+    //             break;
+    //         }
+    //
+    //         iterations++;
+    //     }
+    //
+    //     return cleaned.trim();
+    // };
 
     const handleConfirm = () => {
         const connections = getUniqueConnections(value);
