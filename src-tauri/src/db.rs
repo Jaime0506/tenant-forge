@@ -1,6 +1,7 @@
-use tauri::{AppHandle};
+use tauri::{AppHandle, Manager};
 
-pub fn get_db_path(_app: &AppHandle) -> Result<String, String> {
+#[allow(unused_variables)]
+pub fn get_db_path(app: &AppHandle) -> Result<String, String> {
 
     const DB_NAME: &str = "tenant-forge.db";
     // DEV
