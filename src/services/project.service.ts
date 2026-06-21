@@ -22,6 +22,6 @@ export const getProjectByIdService = (id: number) => {
     return invoke("get_project_by_id", { id });
 };
 
-export const saveProjectService = (id: number, data: DatabaseConnection[]) => {
-    return invoke("save_project", { id, connections: data });
+export const saveProjectService = (id: number, data: DatabaseConnection[], scripts?: string) => {
+    return invoke("save_project", { id, connections: data, scripts });
 };

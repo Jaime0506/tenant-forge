@@ -20,8 +20,8 @@ export const useProjectService = () => {
         callback?.(projects);
     };
 
-    const saveProject = async (id: number, data: DatabaseConnection[]) => {
-        await saveProjectService(id, data);
+    const saveProject = async (id: number, data: DatabaseConnection[], scripts?: string) => {
+        await saveProjectService(id, data, scripts);
     };
 
     return {

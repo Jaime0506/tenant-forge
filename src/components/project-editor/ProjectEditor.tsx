@@ -5,6 +5,10 @@ import useStoreManagement from "@/hooks/useStoreManagement";
 import EnvEditorWarningIcon from "./EnvEditorWarningIcon";
 import { ProjectData } from "@/hooks/useProject";
 import { useProjectConnections } from "@/hooks/useProjectConnections";
+import { useProjectService } from "@/hooks/useProjectService";
+import { toast } from "sonner";
+import ButtonCustom from "../ui-custom/ButtonCustom";
+import { Save } from "lucide-react";
 import {
     DatabaseConnection,
     getUniqueConnections,
@@ -62,8 +66,10 @@ interface ProjectEditorProps {
 
 export default function ProjectEditor({ id, project }: ProjectEditorProps) {
     const [envContent, setEnvContent] = useState("");
-    const [sqlContent, setSqlContent] = useState("");
+    const [sqlContent, setSqlContent] = useState(project?.scripts || "");
     const [shouldAnimateWarning, setShouldAnimateWarning] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const { saveProject } = useProjectService();
 
     const { isEnvEditorWarningShown } = useStoreManagement();
 
@@ -86,6 +92,92 @@ export default function ProjectEditor({ id, project }: ProjectEditorProps) {
 
     const handleExecuteSql = async (selectedConnections: DatabaseConnection[]) => {
         await executeSql(sqlContent, selectedConnections);
+    };
+
+    /**
+     * Limpia todas las comillas de un string
+     */
+    const cleanQuotes = (value: string | undefined): string | undefined => {
+        if (!value) return value;
+        let cleaned = value.trim();
+        let iterations = 0;
+        const maxIterations = 10;
+        while (iterations < maxIterations) {
+            const before = cleaned;
+            cleaned = cleaned.replace(/^['''']+/g, "").replace(/['''']+$/g, "");
+            cleaned = cleaned.replace(/^[""""]+/g, "").replace(/[""""]+$/g, "");
+            if (before === cleaned) break;
+            iterations++;
+        }
+        return cleaned.trim();
+    };
+
+    const handleGlobalSave = async () => {
+        if (!id) {
+            toast.error("No se ha especificado el ID del proyecto");
+            return;
+        }
+
+        try {
+            setIsSaving(true);
+            let fixedConnections: DatabaseConnection[] = [];
+
+            if (envContent.trim()) {
+                const parsedConnections = getUniqueConnections(envContent);
+                const usedConnectionIds = new Set<string>();
+
+                fixedConnections = parsedConnections.map((connection) => {
+                    let match: DatabaseConnection | undefined;
+
+                    match = connections.find(
+                        (c) => !usedConnectionIds.has(c.id) && c.id === connection.id
+                    );
+
+                    if (!match && connection.envKey) {
+                        match = connections.find(
+                            (c) =>
+                                !usedConnectionIds.has(c.id) &&
+                                c.envKey === connection.envKey &&
+                                c.host === connection.host &&
+                                c.port === connection.port
+                        );
+                    }
+
+                    if (!match && connection.envKey) {
+                        match = connections.find(
+                            (c) =>
+                                !usedConnectionIds.has(c.id) &&
+                                c.envKey === connection.envKey
+                        );
+                    }
+
+                    if (match) {
+                        usedConnectionIds.add(match.id);
+                    }
+
+                    return {
+                        id: cleanQuotes(connection.id) || connection.id,
+                        envKey: connection.envKey ?? match?.envKey,
+                        displayName: match?.displayName,
+                        type: cleanQuotes(connection.type),
+                        host: cleanQuotes(connection.host),
+                        db: cleanQuotes(connection.db),
+                        schema: cleanQuotes(connection.schema),
+                        user: cleanQuotes(connection.user),
+                        password: cleanQuotes(connection.password),
+                        port: connection.port,
+                    };
+                });
+            }
+
+            await saveProject(id, fixedConnections, sqlContent);
+            toast.success("Proyecto guardado exitosamente");
+        } catch (error) {
+            console.error("Error guardando proyecto:", error);
+            toast.error(`Error al guardar: ${error}`);
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     useEffect(() => {
@@ -127,8 +219,8 @@ export default function ProjectEditor({ id, project }: ProjectEditorProps) {
 
     return (
         <main className="flex w-full h-full max-h-[90vh] rounded-2xl border border-cerulean-500/30 flex-col gap-6 p-6 sm:p-8 bg-ink-black-950/90 backdrop-blur-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden">
-            {/* Información del proyecto (Opcional, ya que el nombre está en el Tab) */}
-            <div className="flex items-center gap-3 mb-2">
+            {/* Información del proyecto y Botón Guardar */}
+            <div className="flex items-center justify-between mb-2">
                 <div className="flex flex-col">
                     <span className="text-xs font-black text-cerulean-500 uppercase tracking-[0.2em] leading-none mb-1.5">
                         Proyecto Activo
@@ -137,6 +229,16 @@ export default function ProjectEditor({ id, project }: ProjectEditorProps) {
                         {project.name}
                     </h1>
                 </div>
+                
+                <ButtonCustom
+                    isLoading={isSaving}
+                    onClick={handleGlobalSave}
+                    className="gap-2.5 bg-ink-black-900/40 backdrop-blur-md border border-cerulean-800/50 text-white hover:bg-ink-black-800 rounded-xl h-auto px-6 py-3 font-black uppercase tracking-widest text-xs transition-all cursor-pointer shadow-lg disabled:opacity-50"
+                    disabled={isSaving || !id}
+                >
+                    <Save className="size-4" />
+                    Guardar Proyecto
+                </ButtonCustom>
             </div>
 
             {/* Contenedor principal con dos columnas */}
@@ -157,7 +259,6 @@ export default function ProjectEditor({ id, project }: ProjectEditorProps) {
                             onChange={setEnvContent}
                             onConfirm={handleEnvConfirm}
                             currentConnections={connections}
-                            projectId={id}
                         />
                     </div>
                 </div>

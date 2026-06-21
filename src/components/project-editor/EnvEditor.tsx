@@ -3,14 +3,11 @@ import { EditorView } from "@codemirror/view";
 import { Extension } from "@codemirror/state";
 import { syntaxHighlighting } from "@codemirror/language";
 import { Button } from "@/components/ui/button";
-import { Check, Save } from "lucide-react";
+import { Check } from "lucide-react";
 import { getUniqueConnections, DatabaseConnection } from "./envParser";
 import { envParser, getEnvHighlightStyle, getEnvTheme } from "./envEditorTheme";
 import { useThemeDetector } from "@/hooks/useThemeDetector";
 import { useState } from "react";
-import { useProjectService } from "@/hooks/useProjectService";
-import { toast } from "sonner";
-import ButtonCustom from "../ui-custom/ButtonCustom";
 import SearchPanel from "./SearchPanel";
 import { keymap } from "@codemirror/view";
 import { cinematicSearchField, cinematicSearchTheme } from "./cinematicSearchExtension";
@@ -20,8 +17,6 @@ interface EnvEditorProps {
     onChange: (value: string) => void;
     onConfirm?: (connections: DatabaseConnection[]) => void;
     currentConnections?: DatabaseConnection[];
-    projectId?: number;
-    onSaveComplete?: () => void;
 }
 
 export default function EnvEditor({
@@ -29,14 +24,10 @@ export default function EnvEditor({
     onChange,
     onConfirm,
     currentConnections = [],
-    projectId,
-    onSaveComplete,
 }: EnvEditorProps) {
     const isDark = useThemeDetector();
-    const [isSaving, setIsSaving] = useState(false);
     const [isSearchVisible, setIsSearchVisible] = useState(false);
     const [editorView, setEditorView] = useState<EditorView | null>(null);
-    const { saveProject } = useProjectService();
 
     // Crear extensiones dinámicamente según el tema
     const envExtensions: Extension[] = [
@@ -94,92 +85,6 @@ export default function EnvEditor({
     const handleConfirm = () => {
         const connections = getUniqueConnections(value);
         onConfirm?.(connections);
-    };
-
-    const handleSave = async () => {
-        if (!value.trim()) {
-            toast.error("No hay contenido para guardar");
-            return;
-        }
-
-        if (!projectId) {
-            toast.error("No se ha especificado el ID del proyecto");
-            return;
-        }
-
-        try {
-            setIsSaving(true);
-
-            // Parsear las conexiones del contenido .env
-            const connections = getUniqueConnections(value);
-
-            if (connections.length === 0) {
-                toast.error("No se encontraron conexiones válidas en el archivo .env");
-                setIsSaving(false);
-                return;
-            }
-
-            // Track used connections to prevent duplicate matching
-            const usedConnectionIds = new Set<string>();
-
-            // Conservar displayName (y envKey) de las conexiones actuales al guardar
-            const fixedConnections = connections.map((connection) => {
-                let match: DatabaseConnection | undefined;
-
-                // 1. Exact ID match
-                match = currentConnections.find(
-                    (c) => !usedConnectionIds.has(c.id) && c.id === connection.id
-                );
-
-                // 2. Exact config match
-                if (!match && connection.envKey) {
-                    match = currentConnections.find(
-                        (c) =>
-                            !usedConnectionIds.has(c.id) &&
-                            c.envKey === connection.envKey &&
-                            c.host === connection.host &&
-                            c.port === connection.port
-                    );
-                }
-
-                // 3. EnvKey match
-                if (!match && connection.envKey) {
-                    match = currentConnections.find(
-                        (c) =>
-                            !usedConnectionIds.has(c.id) &&
-                            c.envKey === connection.envKey
-                    );
-                }
-
-                if (match) {
-                    usedConnectionIds.add(match.id);
-                }
-                const fixedConnection: DatabaseConnection = {
-                    id: cleanQuotes(connection.id) || connection.id,
-                    envKey: connection.envKey ?? match?.envKey,
-                    displayName: match?.displayName,
-                    type: cleanQuotes(connection.type),
-                    host: cleanQuotes(connection.host),
-                    db: cleanQuotes(connection.db),
-                    schema: cleanQuotes(connection.schema),
-                    user: cleanQuotes(connection.user),
-                    password: cleanQuotes(connection.password),
-                    port: connection.port,
-                };
-                return fixedConnection;
-            });
-
-            // Guardar el proyecto con las conexiones (sin ejecutar SQL)
-            await saveProject(projectId, fixedConnections);
-            toast.success("Proyecto guardado exitosamente");
-
-            onSaveComplete?.();
-        } catch (error) {
-            console.error("Error guardando proyecto:", error);
-            toast.error(`Error al guardar: ${error}`);
-        } finally {
-            setIsSaving(false);
-        }
     };
 
     return (
@@ -243,15 +148,6 @@ export default function EnvEditor({
                     <Check className="size-4" />
                     Confirmar
                 </Button>
-                <ButtonCustom
-                    isLoading={isSaving}
-                    onClick={handleSave}
-                    className="flex-1 gap-2.5 bg-ink-black-900 text-white font-black uppercase tracking-widest text-xs rounded-xl h-auto px-6 py-3 border border-cerulean-900/50 shadow-2xl hover:bg-ink-black-800 disabled:opacity-50 transition-all cursor-pointer"
-                    disabled={!value.trim() || isSaving || !projectId}
-                >
-                    <Save className="size-4" />
-                    Guardar
-                </ButtonCustom>
             </div>
         </div>
     );
