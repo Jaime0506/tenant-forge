@@ -4,23 +4,13 @@ import App from "./App";
 import "./index.css";
 import { HashRouter } from "react-router";
 
-// Detectar y aplicar tema oscuro basado en la preferencia del sistema
-function applySystemTheme() {
-  const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const htmlElement = document.documentElement;
-
-  if (isDark) {
-    htmlElement.classList.add("dark");
-  } else {
-    htmlElement.classList.remove("dark");
-  }
-}
-
-// Aplicar tema al cargar
-applySystemTheme();
-
-// Escuchar cambios en la preferencia del sistema
-window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applySystemTheme);
+// Aplica la preferencia del sistema como primer pintado, antes de que React
+// monte y `ThemeToggle` conozca la preferencia guardada (evita un parpadeo
+// del tema incorrecto). A partir de ahí, `ThemeToggle` toma el control:
+// respeta "claro"/"oscuro" explícitos y solo sigue al sistema en vivo
+// cuando la preferencia guardada es "system".
+const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+document.documentElement.classList.toggle("dark", isDark);
 
 import { ErrorBoundary } from "./components/ErrorBoundary";
 

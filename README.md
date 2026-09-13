@@ -115,5 +115,5 @@ If you want a commercial license, contact me.
 ---
 
 <div align="center">
-  Made with ❤️ by Jaime0506
+  Made with ❤️ by Jaime0506 & Kjsvbshk
 </div>

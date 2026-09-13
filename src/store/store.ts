@@ -8,7 +8,7 @@ const loadStore = async () => {
     store = await load("store.json", {
         autoSave: false,
         defaults: {
-            theme: "dark",
+            theme: "system",
             isFirstTime: true,
             isEnvEditorWarningShown: true,
         },

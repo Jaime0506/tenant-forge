@@ -50,7 +50,7 @@ export default function ConnectionChip({
         <div
           className={`group/chip relative inline-flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-all duration-150 border select-none ${
             isSelected
-              ? "bg-cerulean-500/10 text-cerulean-200 border-cerulean-500/35 shadow-[0_0_12px_rgba(8,191,247,0.08)]"
+              ? "bg-cerulean-500/10 text-cerulean-200 border-cerulean-500/35 shadow-[0_0_12px_rgba(var(--brand-rgb),0.08)]"
               : "bg-surface-2/60 text-muted-foreground border-surface-border hover:bg-surface-3/50 hover:text-foreground"
           }`}
         >

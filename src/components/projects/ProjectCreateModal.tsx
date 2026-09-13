@@ -200,7 +200,7 @@ export default function ProjectCreateModal({
                     <button
                       type="button"
                       onClick={() => handleRemoveTag(tag)}
-                      className="hover:text-rose-400 transition-colors cursor-pointer"
+                      className="hover:text-error transition-colors cursor-pointer"
                       aria-label={`Eliminar tag ${tag}`}
                     >
                       <X className="size-3" />

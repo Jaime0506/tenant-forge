@@ -25,28 +25,28 @@ export default function ErrorBanner({
 }: ErrorBannerProps) {
   const styles = {
     error: {
-      border: "border-rose-500/30",
-      bg: "bg-rose-950/20",
-      text: "text-rose-200",
-      titleText: "text-rose-300",
-      icon: <XCircle className="size-4.5 text-rose-400 shrink-0 mt-0.5" />,
-      badge: "bg-rose-500/15 text-rose-300 border-rose-500/30",
+      border: "border-error/30",
+      bg: "bg-error-soft",
+      text: "text-foreground",
+      titleText: "text-error",
+      icon: <XCircle className="size-4.5 text-error shrink-0 mt-0.5" />,
+      badge: "bg-error/15 text-error border-error/30",
     },
     warning: {
-      border: "border-amber-500/30",
-      bg: "bg-amber-950/20",
-      text: "text-amber-200",
-      titleText: "text-amber-300",
-      icon: <AlertTriangle className="size-4.5 text-amber-400 shrink-0 mt-0.5" />,
-      badge: "bg-amber-500/15 text-amber-300 border-amber-500/30",
+      border: "border-warning/30",
+      bg: "bg-warning-soft",
+      text: "text-foreground",
+      titleText: "text-warning",
+      icon: <AlertTriangle className="size-4.5 text-warning shrink-0 mt-0.5" />,
+      badge: "bg-warning/15 text-warning border-warning/30",
     },
     info: {
-      border: "border-cerulean-500/30",
-      bg: "bg-cerulean-950/20",
-      text: "text-cerulean-200",
-      titleText: "text-cerulean-300",
-      icon: <Info className="size-4.5 text-cerulean-400 shrink-0 mt-0.5" />,
-      badge: "bg-cerulean-500/15 text-cerulean-300 border-cerulean-500/30",
+      border: "border-info/30",
+      bg: "bg-info-soft",
+      text: "text-foreground",
+      titleText: "text-info",
+      icon: <Info className="size-4.5 text-info shrink-0 mt-0.5" />,
+      badge: "bg-info/15 text-info border-info/30",
     },
   }[variant];
 
@@ -82,7 +82,7 @@ export default function ErrorBanner({
             <button
               type="button"
               onClick={action.onClick}
-              className="text-[11px] font-medium underline underline-offset-2 hover:opacity-80 transition-opacity cursor-pointer text-cerulean-300"
+              className="text-[11px] font-medium underline underline-offset-2 hover:opacity-80 transition-opacity cursor-pointer text-primary"
             >
               {action.label}
             </button>
@@ -94,7 +94,7 @@ export default function ErrorBanner({
         <button
           type="button"
           onClick={onDismiss}
-          className="p-1 rounded text-ink-black-400 hover:text-white transition-colors cursor-pointer"
+          className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           aria-label="Cerrar alerta"
         >
           <X className="size-3.5" />

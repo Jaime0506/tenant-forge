@@ -38,7 +38,7 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
           onClick(project.id ?? 0);
         }
       }}
-      className="group relative flex flex-col justify-between p-5 rounded-xl border border-surface-border bg-surface-1/80 hover:bg-surface-2/60 hover:border-cerulean-500/35 transition-all duration-200 cursor-pointer shadow-lg hover:shadow-[0_8px_30px_rgba(8,191,247,0.08)] select-none text-left"
+      className="group relative flex flex-col justify-between p-5 rounded-xl border border-surface-border bg-surface-1/80 hover:bg-surface-2/60 hover:border-cerulean-500/35 transition-all duration-200 cursor-pointer shadow-lg hover:shadow-[0_8px_30px_rgba(var(--brand-rgb),0.08)] select-none text-left"
     >
       {/* Indicador de acento superior tenue */}
       <div className="absolute top-0 left-4 right-4 h-px bg-linear-to-r from-transparent via-cerulean-500/20 to-transparent group-hover:via-cerulean-400/50 transition-colors" />

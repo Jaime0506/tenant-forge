@@ -31,9 +31,9 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="flex w-full h-screen flex-col items-center justify-center p-6 bg-surface-base text-jet-black-50 font-sans">
-          <div className="w-full max-w-2xl bg-surface-1 border border-rose-500/40 rounded-xl p-6 shadow-2xl space-y-4">
-            <div className="flex items-center gap-3 text-rose-400 pb-3 border-b border-rose-500/20">
+        <div className="flex w-full h-screen flex-col items-center justify-center p-6 bg-surface-base text-foreground font-sans">
+          <div className="w-full max-w-2xl bg-surface-1 border border-error/40 rounded-xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-error pb-3 border-b border-error/20">
               <AlertOctagon className="size-6" />
               <div>
                 <h2 className="text-base font-bold">Error en la interfaz (React Crash)</h2>
@@ -44,11 +44,11 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
 
             <div className="space-y-2">
-              <span className="text-xs font-mono font-bold text-rose-300">
+              <span className="text-xs font-mono font-bold text-error">
                 {this.state.error?.name}: {this.state.error?.message}
               </span>
 
-              <div className="p-3 bg-surface-base rounded-lg border border-surface-border text-[11px] font-mono text-rose-200/80 max-h-60 overflow-y-auto whitespace-pre-wrap">
+              <div className="p-3 bg-surface-base rounded-lg border border-surface-border text-[11px] font-mono text-error/80 max-h-60 overflow-y-auto whitespace-pre-wrap">
                 {this.state.error?.stack || "Sin stack trace disponible"}
               </div>
 

@@ -4,73 +4,97 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* Brand Palette */
-  --color-jet-black-50: #e9f7fb;
-  --color-jet-black-100: #d3f0f8;
-  --color-jet-black-200: #a7e1f1;
-  --color-jet-black-300: #7bd2ea;
-  --color-jet-black-400: #50c3e2;
-  --color-jet-black-500: #24b4db;
-  --color-jet-black-600: #1d90af;
-  --color-jet-black-700: #156c84;
-  --color-jet-black-800: #0e4858;
-  --color-jet-black-900: #07242c;
-  --color-jet-black-950: #05191f;
+  /* Tenant/marca — Ocean (base 0F2027/2C5364). Reactivo al tema (valores en :root/.dark). */
+  --color-cerulean-50: var(--brand-50);
+  --color-cerulean-100: var(--brand-100);
+  --color-cerulean-200: var(--brand-200);
+  --color-cerulean-300: var(--brand-300);
+  --color-cerulean-400: var(--brand-400);
+  --color-cerulean-500: var(--brand-500);
+  --color-cerulean-600: var(--brand-600);
+  --color-cerulean-700: var(--brand-700);
+  --color-cerulean-800: var(--brand-800);
+  --color-cerulean-900: var(--brand-900);
+  --color-cerulean-950: var(--brand-950);
 
-  --color-icy-aqua-50: #e5ffff;
-  --color-icy-aqua-100: #ccffff;
-  --color-icy-aqua-200: #99ffff;
-  --color-icy-aqua-300: #66ffff;
-  --color-icy-aqua-400: #33ffff;
-  --color-icy-aqua-500: #00ffff;
-  --color-icy-aqua-600: #00cccc;
-  --color-icy-aqua-700: #009999;
-  --color-icy-aqua-800: #006666;
-  --color-icy-aqua-900: #003333;
-  --color-icy-aqua-950: #002424;
+  /* Rampas heredadas: usadas hoy solo por la intro/onboarding (splash),
+     que mantiene una estética oscura fija independiente del tema del
+     sistema. Recoloreadas a la identidad de marca (antes eran cian). */
+  --color-jet-black-50: #f6e8e6;
+  --color-jet-black-100: #eed3cf;
+  --color-jet-black-200: #e2b3ac;
+  --color-jet-black-300: #d69089;
+  --color-jet-black-400: #c46e66;
+  --color-jet-black-500: #a5524f;
+  --color-jet-black-600: #874340;
+  --color-jet-black-700: #693432;
+  --color-jet-black-800: #4a2523;
+  --color-jet-black-900: #2e1615;
+  --color-jet-black-950: #1c0d0c;
 
-  --color-ink-black-50: #ecf6f9;
-  --color-ink-black-100: #d8edf3;
-  --color-ink-black-200: #b2dbe6;
-  --color-ink-black-300: #8bc9da;
-  --color-ink-black-400: #65b6cd;
-  --color-ink-black-500: #3ea4c1;
-  --color-ink-black-600: #32839a;
-  --color-ink-black-700: #256374;
-  --color-ink-black-800: #19424d;
-  --color-ink-black-900: #0c2127;
-  --color-ink-black-950: #07161a;
+  --color-icy-aqua-50: #f6e8e6;
+  --color-icy-aqua-100: #eed3cf;
+  --color-icy-aqua-200: #e2b3ac;
+  --color-icy-aqua-300: #d69089;
+  --color-icy-aqua-400: #c46e66;
+  --color-icy-aqua-500: #a5524f;
+  --color-icy-aqua-600: #874340;
+  --color-icy-aqua-700: #693432;
+  --color-icy-aqua-800: #4a2523;
+  --color-icy-aqua-900: #2e1615;
+  --color-icy-aqua-950: #1c0d0c;
 
-  --color-dark-teal-50: #e8f8fd;
-  --color-dark-teal-100: #d0f1fb;
-  --color-dark-teal-200: #a1e3f7;
-  --color-dark-teal-300: #72d5f3;
-  --color-dark-teal-400: #43c7ef;
-  --color-dark-teal-500: #14b9eb;
-  --color-dark-teal-600: #1094bc;
-  --color-dark-teal-700: #0c6f8d;
-  --color-dark-teal-800: #084a5e;
-  --color-dark-teal-900: #04252f;
-  --color-dark-teal-950: #031a21;
+  --color-ink-black-50: #f6e8e6;
+  --color-ink-black-100: #eed3cf;
+  --color-ink-black-200: #e2b3ac;
+  --color-ink-black-300: #d69089;
+  --color-ink-black-400: #c46e66;
+  --color-ink-black-500: #a5524f;
+  --color-ink-black-600: #874340;
+  --color-ink-black-700: #693432;
+  --color-ink-black-800: #4a2523;
+  --color-ink-black-900: #2e1615;
+  --color-ink-black-950: #1c0d0c;
 
-  --color-cerulean-50: #e6f9fe;
-  --color-cerulean-100: #cef2fd;
-  --color-cerulean-200: #9ce6fc;
-  --color-cerulean-300: #6bd9fa;
-  --color-cerulean-400: #39ccf9;
-  --color-cerulean-500: #08bff7;
-  --color-cerulean-600: #0699c6;
-  --color-cerulean-700: #057394;
-  --color-cerulean-800: #034d63;
-  --color-cerulean-900: #022631;
-  --color-cerulean-950: #011b23;
+  --color-dark-teal-50: #f6e8e6;
+  --color-dark-teal-100: #eed3cf;
+  --color-dark-teal-200: #e2b3ac;
+  --color-dark-teal-300: #d69089;
+  --color-dark-teal-400: #c46e66;
+  --color-dark-teal-500: #a5524f;
+  --color-dark-teal-600: #874340;
+  --color-dark-teal-700: #693432;
+  --color-dark-teal-800: #4a2523;
+  --color-dark-teal-900: #2e1615;
+  --color-dark-teal-950: #1c0d0c;
 
-  /* Precision Surfaces & Layout */
-  --color-surface-base: #061115;
-  --color-surface-1: #09171b;
-  --color-surface-2: #0c2026;
-  --color-surface-3: #122c34;
+  /* Superficies — mapeadas al sistema macOS/SaaS: surface-1 = surface,
+     surface-2 = surface-subtle, surface-3 = surface-hover. */
+  --color-surface-base: var(--background);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-active: var(--surface-active);
   --color-surface-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-disabled: var(--text-disabled);
+
+  /* Color del tenant: separado de los neutrales. Transforma entre temas en
+     vez de reutilizar el mismo hex (ver :root / .dark). */
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
+  --color-primary-soft: var(--primary-soft);
+
+  /* Semánticos — función, no marca. No se saturan al máximo. */
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-error: var(--error);
+  --color-error-soft: var(--error-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
 
   /* Shadcn Semantic Overrides */
   --radius-sm: calc(var(--radius) - 4px);
@@ -97,47 +121,138 @@
   --color-ring: var(--ring);
 }
 
+/* ---------------------------------------------------------------------
+   Sistema de diseño: paleta "Ocean" derivada de los dos colores base del
+   gradiente de marca — 0F2027 (petróleo casi negro) y 2C5364 (acero
+   azul-verdoso). Ambos comparten matiz (~198°); a partir de ahí se deriva
+   toda la escala de superficies/texto en Light (tintes muy claros de ese
+   mismo matiz) y Dark (0F2027/2C5364 directamente). El acento de acción
+   (--primary) usa un azul más saturado/vivo de la misma familia (~202°)
+   para que botones/links resalten sobre los neutrales fríos, en vez de
+   reutilizar el tono apagado de los neutrales.
+--------------------------------------------------------------------- */
+
 :root {
   --radius: 0.5rem;
-  --background: #061115;
-  --foreground: #e9f7fb;
-  --card: #09171b;
-  --card-foreground: #e9f7fb;
-  --popover: #09171b;
-  --popover-foreground: #e9f7fb;
-  --primary: #08bff7;
-  --primary-foreground: #061115;
-  --secondary: #0c2026;
-  --secondary-foreground: #a7e1f1;
-  --muted: #0c2026;
-  --muted-foreground: #65b6cd;
-  --accent: rgba(8, 191, 247, 0.15);
-  --accent-foreground: #e5ffff;
-  --destructive: #f43f5e;
-  --border: rgba(8, 191, 247, 0.14);
-  --input: rgba(8, 191, 247, 0.16);
-  --ring: #08bff7;
+
+  /* Neutrales — tinte petróleo muy claro → blanco frío → acero claro */
+  --background: #f0f5f8;
+  --card: #fcfdfd;
+  --card-foreground: #142329;
+  --popover: #fcfdfd;
+  --popover-foreground: #142329;
+  --foreground: #142329;
+  --secondary: #e4edf1;
+  --secondary-foreground: #142329;
+  --muted: #e4edf1;
+  --muted-foreground: #395865;
+  --text-tertiary: #628493;
+  --text-disabled: #a0b3ba;
+  --border: #a8bec7;
+  --border-subtle: #d6e1e6;
+  --input: #a8bec7;
+
+  --surface-1: #fcfdfd;
+  --surface-2: #e4edf1;
+  --surface-3: #d9e5ea;
+  --surface-active: #cbdbe2;
+
+  /* Color de marca/acción — azul vivo derivado de 2C5364 */
+  --primary: #1575ac;
+  --primary-hover: #106393;
+  --primary-active: #0c5179;
+  --primary-soft: #e3f0f7;
+  --primary-foreground: #fcfdfd;
+  --accent: var(--primary-soft);
+  --accent-foreground: var(--primary);
+  --ring: var(--primary);
+
+  /* Triplete RGB del acento, para rgba() en clases arbitrarias y <style> */
+  --brand-rgb: 21, 117, 172;
+
+  /* Semánticos (función, no marca) */
+  --success: #248a3d;
+  --success-soft: #eaf6ed;
+  --warning: #c93400;
+  --warning-soft: #fdf1e6;
+  --error: #d70015;
+  --error-soft: #fdebec;
+  --info: #0066cc;
+  --info-soft: #e8f1fc;
+  --destructive: var(--error);
+
+  /* Rampa de acento (iconos, badges, bordes tenues). 500/600/700 son el
+     propio primary/hover/active. 50/100 son washes, 800+ son sombras. */
+  --brand-50: #f3f8fc;
+  --brand-100: #e3f0f7;
+  --brand-200: #c2dff0;
+  --brand-300: #96cae9;
+  --brand-400: #58b1e4;
+  --brand-500: #1575ac;
+  --brand-600: #106393;
+  --brand-700: #0c5179;
+  --brand-800: #0a4363;
+  --brand-900: #08324a;
+  --brand-950: #062232;
 }
 
 .dark {
-  --background: #061115;
-  --foreground: #e9f7fb;
-  --card: #09171b;
-  --card-foreground: #e9f7fb;
-  --popover: #09171b;
-  --popover-foreground: #e9f7fb;
-  --primary: #08bff7;
-  --primary-foreground: #061115;
-  --secondary: #0c2026;
-  --secondary-foreground: #a7e1f1;
-  --muted: #0c2026;
-  --muted-foreground: #65b6cd;
-  --accent: rgba(8, 191, 247, 0.15);
-  --accent-foreground: #e5ffff;
-  --destructive: #f43f5e;
-  --border: rgba(8, 191, 247, 0.14);
-  --input: rgba(8, 191, 247, 0.16);
-  --ring: #08bff7;
+  /* Neutrales — 0F2027 → acero oscuro → acero medio (2C5364) */
+  --background: #0f2027;
+  --card: #172c36;
+  --card-foreground: #f0f3f5;
+  --popover: #172c36;
+  --popover-foreground: #f0f3f5;
+  --foreground: #f0f3f5;
+  --secondary: #1c353f;
+  --secondary-foreground: #f0f3f5;
+  --muted: #1c353f;
+  --muted-foreground: #abbdc4;
+  --text-tertiary: #7d96a1;
+  --text-disabled: #53666e;
+  --border: #3d6171;
+  --border-subtle: #253941;
+  --input: #3d6171;
+
+  --surface-1: #172c36;
+  --surface-2: #1c353f;
+  --surface-3: #24404c;
+  --surface-active: #2d4e5c;
+
+  /* Color de marca/acción — azul aclarado, para leerse bien sobre
+     superficies oscuras sin verse apagado. */
+  --primary: #6cb8e5;
+  --primary-hover: #89c7ec;
+  --primary-active: #4ba7dd;
+  --primary-soft: #1f3f51;
+  --primary-foreground: #0f2027;
+  --accent: var(--primary-soft);
+  --accent-foreground: #abd5ed;
+  --ring: var(--primary);
+
+  --brand-rgb: 108, 184, 229;
+
+  --success: #30d158;
+  --success-soft: #193322;
+  --warning: #ff9f0a;
+  --warning-soft: #3a2812;
+  --error: #ff453a;
+  --error-soft: #3a1616;
+  --info: #0a84ff;
+  --info-soft: #16283d;
+  --destructive: var(--error);
+
+  --brand-50: #1f3f51;
+  --brand-100: #24516b;
+  --brand-200: #276386;
+  --brand-300: #2b7cab;
+  --brand-400: #359ad4;
+  --brand-500: #6cb8e5;
+  --brand-600: #89c7ec;
+  --brand-700: #abd5ed;
+  --brand-800: #cce3f0;
+  --brand-900: #e5eff5;
+  --brand-950: #f5f8fa;
 }
 
 @layer base {
@@ -146,23 +261,33 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased selection:bg-cerulean-500/30 selection:text-white;
+    @apply bg-background text-foreground antialiased selection:bg-primary/25 selection:text-foreground;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
 
-/* Background grid utility */
-.bg-tech-grid {
-  background-size: 28px 28px;
-  background-image: 
-    linear-gradient(to right, rgba(8, 191, 247, 0.035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(8, 191, 247, 0.035) 1px, transparent 1px);
+/* Textura de grano sutil — reemplaza la cuadrícula técnica anterior por un
+   grano fino tipo película. No fija color propio (usa mix-blend-mode desde
+   quien la aplica), así que sirve igual en claro y oscuro. */
+.bg-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
+/* Resplandor ambiental reactivo al tema — para el fondo del hub principal
+   (ProjectsPage). A diferencia de .bg-radial-glow (fijo, solo para el splash
+   de onboarding), este usa var(--background)/var(--brand-rgb) y por eso se
+   ve correcto tanto en claro como en oscuro. */
+.bg-ambient-glow {
+  background: radial-gradient(circle 800px at 50% -100px, rgba(var(--brand-rgb), 0.07), transparent 70%),
+              radial-gradient(circle 600px at 85% 70%, rgba(var(--brand-rgb), 0.04), transparent 60%),
+              var(--background);
 }
 
 .bg-radial-glow {
-  background: radial-gradient(circle 800px at 50% -100px, rgba(8, 191, 247, 0.07), transparent 70%),
-              radial-gradient(circle 600px at 85% 60%, rgba(0, 255, 255, 0.035), transparent 60%),
-              #061115;
+  background: radial-gradient(circle 800px at 50% -100px, rgba(165, 82, 79, 0.1), transparent 70%),
+              radial-gradient(circle 600px at 85% 60%, rgba(165, 82, 79, 0.05), transparent 60%),
+              #1c0d0c;
 }
 
 /* Scrollbars */
@@ -176,15 +301,15 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(8, 191, 247, 0.15);
+  background-color: rgba(var(--brand-rgb), 0.2);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(8, 191, 247, 0.35);
+  background-color: rgba(var(--brand-rgb), 0.4);
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(8, 191, 247, 0.15) transparent;
+  scrollbar-color: rgba(var(--brand-rgb), 0.2) transparent;
 }

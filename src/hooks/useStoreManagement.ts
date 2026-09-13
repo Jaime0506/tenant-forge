@@ -53,9 +53,9 @@ export default function useStoreManagement() {
     };
 
     const setThemeInStore = async (theme: string) => {
+        setTheme(theme); // Optimista: la UI responde de inmediato
         try {
             await storeManagement.set("theme", theme);
-            setTheme(theme);
         } catch (error) {
             console.error("Error setting theme:", error);
         }

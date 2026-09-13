@@ -108,8 +108,8 @@ export default function EnvEditor({
             }
             .cm-gutters {
               background-color: var(--color-surface-base) !important;
-              border-right: 1px solid rgba(8, 191, 247, 0.08) !important;
-              color: rgba(101, 182, 205, 0.4) !important;
+              border-right: 1px solid rgba(var(--brand-rgb), 0.08) !important;
+              color: var(--muted-foreground) !important;
               padding-right: 8px !important;
             }
           `}</style>
