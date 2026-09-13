@@ -19,12 +19,13 @@ const buttonVariants = cva(
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
-        // Acción primaria de marca: cerulean sólido con glow, usada en los CTA
-        // principales (crear proyecto, ejecutar SQL, confirmar modal).
-        cta: "bg-cerulean-500 text-surface-base font-semibold rounded-lg shadow-[0_0_15px_rgba(8,191,247,0.25)] hover:bg-cerulean-400 hover:shadow-[0_0_20px_rgba(8,191,247,0.4)] cursor-pointer",
+        // Acción primaria de marca: tinta/acento sólido con glow, usada en los
+        // CTA principales (crear proyecto, ejecutar SQL, confirmar modal).
+        // bg-primary/text-primary-foreground ya son reactivos al tema.
+        cta: "bg-primary text-primary-foreground font-semibold rounded-lg shadow-[0_0_15px_rgba(var(--brand-rgb),0.25)] hover:bg-primary-hover hover:shadow-[0_0_20px_rgba(var(--brand-rgb),0.4)] cursor-pointer",
         // Acción secundaria sobre superficies: usada para guardar/confirmar
         // sin ser la acción principal de la pantalla.
-        surface: "bg-surface-2 text-foreground font-medium rounded-lg border border-surface-border shadow-sm hover:bg-surface-3 hover:border-cerulean-500/30 cursor-pointer",
+        surface: "bg-surface-2 text-foreground font-medium rounded-lg border border-surface-border shadow-sm hover:bg-surface-3 hover:border-primary/30 cursor-pointer",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

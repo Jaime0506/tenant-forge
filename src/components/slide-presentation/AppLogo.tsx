@@ -21,7 +21,7 @@ export function AppLogo() {
         <img
           src={AppIcon}
           alt="TenantForge Icon"
-          className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 relative z-10 drop-shadow-[0_0_15px_rgba(8,191,247,0.15)]"
+          className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 relative z-10 drop-shadow-[0_0_15px_rgba(165,82,79,0.25)]"
         />
       </motion.div>
 

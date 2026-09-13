@@ -1,6 +1,6 @@
 [package]
 name = "tenant-forge"
-version = "0.1.3"
+version = "0.1.6"
 description = "A Tauri App"
 authors = ["Jaime M", "Irving R"]
 edition = "2021"

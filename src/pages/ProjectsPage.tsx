@@ -1,11 +1,11 @@
 import { useState } from "react";
 import ProjectsView from "@/components/projects/ProjectsView";
-import { AnimatedBackground } from "@/components/slide-presentation/AnimatedBackground";
 import { AnimatePresence, motion } from "motion/react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProjectEditor from "@/components/project-editor/ProjectEditor";
 import { ProjectData } from "@/hooks/useProject";
 import { X, Home, Database } from "lucide-react";
+import ThemeToggle from "@/components/ui-custom/ThemeToggle";
 
 export default function ProjectsPage() {
   const [openProjects, setOpenProjects] = useState<ProjectData[]>([]);
@@ -30,7 +30,8 @@ export default function ProjectsPage() {
 
   return (
     <div className="relative flex w-full h-screen bg-surface-base text-foreground justify-center items-center overflow-hidden">
-      <AnimatedBackground />
+      <div className="absolute inset-0 bg-ambient-glow pointer-events-none select-none" />
+      <div className="absolute inset-0 bg-grain opacity-[0.05] mix-blend-overlay pointer-events-none select-none" />
 
       <div className="relative z-10 w-full h-full p-2.5 sm:p-4 md:p-5 flex flex-col overflow-hidden">
         <Tabs
@@ -80,7 +81,7 @@ export default function ProjectsPage() {
                             handleCloseProject(e as any, project.id!);
                           }
                         }}
-                        className="ml-1 p-0.5 rounded hover:bg-surface-base hover:text-rose-400 text-muted-foreground transition-colors cursor-pointer inline-flex items-center justify-center shrink-0"
+                        className="ml-1 p-0.5 rounded hover:bg-surface-base hover:text-error text-muted-foreground transition-colors cursor-pointer inline-flex items-center justify-center shrink-0"
                         title="Cerrar pestaña"
                         aria-label="Cerrar pestaña"
                       >
@@ -91,6 +92,8 @@ export default function ProjectsPage() {
                 ))}
               </AnimatePresence>
             </TabsList>
+
+            <ThemeToggle />
           </div>
 
           {/* Área de Contenido */}

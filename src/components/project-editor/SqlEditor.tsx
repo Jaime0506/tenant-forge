@@ -208,16 +208,16 @@ export default function SqlEditor({
             }
             .cm-gutters {
               background-color: var(--color-surface-base) !important;
-              border-right: 1px solid rgba(8, 191, 247, 0.08) !important;
-              color: rgba(101, 182, 205, 0.4) !important;
+              border-right: 1px solid rgba(var(--brand-rgb), 0.08) !important;
+              color: var(--muted-foreground) !important;
               padding-right: 8px !important;
             }
             .cm-activeLineGutter {
               color: var(--color-cerulean-400) !important;
-              background-color: rgba(8, 191, 247, 0.06) !important;
+              background-color: rgba(var(--brand-rgb), 0.06) !important;
             }
             .cm-activeLine {
-              background-color: rgba(8, 191, 247, 0.04) !important;
+              background-color: rgba(var(--brand-rgb), 0.04) !important;
             }
           `}</style>
         </div>

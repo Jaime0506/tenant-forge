@@ -133,8 +133,8 @@ export const getSqlTheme = (isDark: boolean) =>
         },
         // Estilos para el autocompletado
         ".cm-tooltip-autocomplete": {
-            backgroundColor: isDark ? "hsl(var(--popover))" : "#ffffff",
-            border: `1px solid ${isDark ? "hsl(var(--border))" : "#e5e7eb"}`,
+            backgroundColor: "var(--popover)",
+            border: "1px solid var(--border)",
             borderRadius: "8px",
             boxShadow: isDark
                 ? "0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3)"
@@ -144,7 +144,7 @@ export const getSqlTheme = (isDark: boolean) =>
             overflowY: "auto",
         },
         ".cm-completionLabel": {
-            color: isDark ? "hsl(var(--foreground))" : "#1f2937",
+            color: "var(--foreground)",
             fontSize: "14px",
             fontFamily:
                 "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace",
@@ -152,7 +152,7 @@ export const getSqlTheme = (isDark: boolean) =>
             padding: "4px 8px",
         },
         ".cm-completionDetail": {
-            color: isDark ? "hsl(var(--muted-foreground))" : "#6b7280",
+            color: "var(--muted-foreground)",
             fontSize: "12px",
             fontStyle: "italic",
         },
@@ -181,8 +181,8 @@ export const getSqlTheme = (isDark: boolean) =>
             textDecoration: "none",
         },
         ".cm-completionLabel.cm-completionLabel-selected": {
-            backgroundColor: isDark ? "hsl(var(--accent))" : "#e5e7eb",
-            color: isDark ? "hsl(var(--accent-foreground))" : "#111827",
+            backgroundColor: "var(--accent)",
+            color: "var(--accent-foreground)",
         },
         ".cm-completionLabel.cm-completionLabel-selected .cm-completionMatchedText":
             {
@@ -192,12 +192,12 @@ export const getSqlTheme = (isDark: boolean) =>
                 color: isDark ? "#fee2e2" : "#991b1b",
             },
         ".cm-tooltip-autocomplete ul li[aria-selected]": {
-            backgroundColor: isDark ? "rgba(248, 113, 113, 0.4)" : "#e5e7eb",
-            color: isDark ? "hsl(var(--accent-foreground))" : "#111827",
+            backgroundColor: "var(--accent)",
+            color: "var(--accent-foreground)",
         },
         ".cm-tooltip-autocomplete ul li[aria-selected] .cm-completionLabel": {
-            backgroundColor: isDark ? "hsl(var(--accent))" : "#e5e7eb",
-            color: isDark ? "hsl(var(--accent-foreground))" : "#111827",
+            backgroundColor: "var(--accent)",
+            color: "var(--accent-foreground)",
         },
         ".cm-completionList": {
             maxHeight: "300px",

@@ -193,9 +193,9 @@ export default function SqlExecutionInspector({
             {isExecuting ? (
               <div className="size-3.5 rounded-full border-2 border-cerulean-400 border-t-transparent animate-spin" />
             ) : hasFailures ? (
-              <XCircle className="size-4 text-rose-400" />
+              <XCircle className="size-4 text-error" />
             ) : (
-              <CheckCircle2 className="size-4 text-emerald-400" />
+              <CheckCircle2 className="size-4 text-success" />
             )}
             <span className="font-medium tracking-tight">Consola de Resultados</span>
           </button>
@@ -205,12 +205,12 @@ export default function SqlExecutionInspector({
             <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono bg-surface-3/60 text-muted-foreground border border-surface-border">
               Total: {totalCount}
             </span>
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono bg-success/10 text-success border border-success/20">
               {successfulCount} exitosos
             </span>
             {failedCount > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono bg-rose-500/15 text-rose-300 border border-rose-500/30 animate-pulse">
-                <AlertTriangle className="size-3 text-rose-400" />
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono bg-error/15 text-error border border-error/30 animate-pulse">
+                <AlertTriangle className="size-3 text-error" />
                 {failedCount} fallidos
               </span>
             )}
@@ -294,7 +294,7 @@ export default function SqlExecutionInspector({
                   onClick={() => setStatusFilter("failed")}
                   className={`px-1.5 py-0.5 rounded transition-colors cursor-pointer font-medium ${
                     statusFilter === "failed"
-                      ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                      ? "bg-error/20 text-error border border-error/40"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -305,7 +305,7 @@ export default function SqlExecutionInspector({
                   onClick={() => setStatusFilter("success")}
                   className={`px-1.5 py-0.5 rounded transition-colors cursor-pointer font-medium ${
                     statusFilter === "success"
-                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                      ? "bg-success/20 text-success border border-success/30"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -338,9 +338,9 @@ export default function SqlExecutionInspector({
                       }`}
                     >
                       {result.success ? (
-                        <CheckCircle2 className="size-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                        <CheckCircle2 className="size-3.5 text-success shrink-0 mt-0.5" />
                       ) : (
-                        <XCircle className="size-3.5 text-rose-400 shrink-0 mt-0.5" />
+                        <XCircle className="size-3.5 text-error shrink-0 mt-0.5" />
                       )}
 
                       <div className="min-w-0 flex-1">
@@ -381,14 +381,14 @@ export default function SqlExecutionInspector({
                     <span
                       className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-medium border whitespace-nowrap shrink-0 ${
                         activeResult.success
-                          ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
-                          : "bg-rose-500/15 text-rose-300 border-rose-500/30"
+                          ? "bg-success/15 text-success border-success/30"
+                          : "bg-error/15 text-error border-error/30"
                       }`}
                     >
                       {activeResult.success ? "EXITOSO" : "ERROR"}
                     </span>
                     {postgresErrorCode && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded font-mono bg-rose-950/80 text-rose-200 border border-rose-500/30 whitespace-nowrap shrink-0">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded font-mono bg-error/20 text-error border border-error/30 whitespace-nowrap shrink-0">
                         {postgresErrorCode}
                       </span>
                     )}
@@ -414,7 +414,7 @@ export default function SqlExecutionInspector({
                       title="Copiar informe técnico al portapapeles"
                     >
                       {hasCopied ? (
-                        <Check className="size-3 text-emerald-400 shrink-0" />
+                        <Check className="size-3 text-success shrink-0" />
                       ) : (
                         <Copy className="size-3 text-muted-foreground shrink-0" />
                       )}
@@ -437,12 +437,12 @@ export default function SqlExecutionInspector({
 
                   <div className="flex-1 p-3 overflow-y-auto font-mono text-[11px] leading-relaxed select-text">
                     {activeResult.success ? (
-                      <div className="text-emerald-300">
+                      <div className="text-success">
                         ✓ {activeResult.message || "Sentencia SQL ejecutada correctamente en la base de datos."}
                       </div>
                     ) : (
-                      <div className="text-rose-200/90 whitespace-pre-wrap break-all">
-                        <span className="text-rose-400 font-bold block mb-1">
+                      <div className="text-error/90 whitespace-pre-wrap break-all">
+                        <span className="text-error font-bold block mb-1">
                           [ERROR EN POSTGRESQL]
                         </span>
                         {activeResult.message}
