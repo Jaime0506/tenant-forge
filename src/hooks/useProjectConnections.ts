@@ -1,233 +1,164 @@
-import { useState, useCallback } from "react";
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
-import { DatabaseConnection } from "@/components/project-editor/envParser";
+import { useState, useCallback, useRef } from "react";
+import { listen, UnlistenFn } from "@tauri-apps/api/event";
+import { DatabaseConnection, sanitizeConnection } from "@/components/project-editor/envParser";
+import {
+    cancelExecutionService,
+    executeSqlService,
+    ExecuteOptions,
+    ExecutionPhase,
+    ExecutionResult,
+} from "@/services/execution.service";
 
-interface ExecutionResult {
-    connection_id: string;
-    success: boolean;
-    message: string;
-}
-
-/**
- * Limpia todas las comillas (simples y dobles, normales y Unicode) de un string
- * Maneja casos con comillas anidadas o múltiples capas
- */
-const cleanQuotes = (value: any): string | undefined => {
-    if (value === undefined || value === null) return undefined;
-
-    let cleaned = String(value).trim();
-    let iterations = 0;
-    const maxIterations = 10; // Límite de seguridad
-
-    // Iterar hasta que no haya más cambios (elimina comillas anidadas)
-    while (iterations < maxIterations) {
-        const before = cleaned;
-
-        // Eliminar todas las variantes de comillas simples del inicio y final
-        // Incluye: ' (normal), ' (left single), ' (right single)
-        cleaned = cleaned.replace(/^['''']+/g, "").replace(/['''']+$/g, "");
-
-        // Eliminar todas las variantes de comillas dobles del inicio y final
-        // Incluye: " (normal), " (left double), " (right double)
-        cleaned = cleaned.replace(/^[""""]+/g, "").replace(/[""""]+$/g, "");
-
-        // Si no hubo cambios, salir
-        if (before === cleaned) {
-            break;
-        }
-
-        iterations++;
-    }
-
-    return cleaned.trim();
-};
+export type RunOptions = Omit<ExecuteOptions, "executionId">;
 
 export const useProjectConnections = () => {
     const [connections, setConnections] = useState<DatabaseConnection[]>([]);
     const [isExecutingSql, setIsExecutingSql] = useState(false);
-    const [executionResults, setExecutionResults] = useState<
-        ExecutionResult[] | null
-    >(null);
+    const [executionResults, setExecutionResults] = useState<ExecutionResult[] | null>(null);
+    const [executionPhase, setExecutionPhase] = useState<ExecutionPhase | null>(null);
+    const currentExecutionId = useRef<string | null>(null);
 
     /**
      * Maneja la confirmación de conexiones detectadas desde el editor .env.
      * Conserva displayName de las conexiones actuales al re-parsear.
      */
-    const handleEnvConfirm = useCallback(
-        (detectedConnections: DatabaseConnection[]) => {
-            setConnections((prev) => {
-                if (prev.length === 0) return detectedConnections;
-                const usedPrevIds = new Set<string>();
+    const handleEnvConfirm = useCallback((detectedConnections: DatabaseConnection[]) => {
+        setConnections((prev) => {
+            if (prev.length === 0) return detectedConnections;
+            const usedPrevIds = new Set<string>();
 
-                return detectedConnections.map((detected) => {
-                    // Start with no match
-                    let match: DatabaseConnection | undefined;
-
-                    // 1. Exact ID match (highest priority, strictly valid)
+            return detectedConnections.map((detected) => {
+                // 1. Mismo id; 2. misma config (envKey + host + port); 3. mismo envKey
+                let match = prev.find((p) => !usedPrevIds.has(p.id) && p.id === detected.id);
+                if (!match && detected.envKey) {
                     match = prev.find(
-                        (p) => !usedPrevIds.has(p.id) && p.id === detected.id
+                        (p) =>
+                            !usedPrevIds.has(p.id) &&
+                            p.envKey === detected.envKey &&
+                            p.host === detected.host &&
+                            p.port === detected.port
                     );
+                }
+                if (!match && detected.envKey) {
+                    match = prev.find((p) => !usedPrevIds.has(p.id) && p.envKey === detected.envKey);
+                }
 
-                    // 2. Exact config match (same EnvKey + Host + Port)
-                    // Useful if ID changed but config is identical
-                    if (!match && detected.envKey) {
-                        match = prev.find(
-                            (p) =>
-                                !usedPrevIds.has(p.id) &&
-                                p.envKey === detected.envKey &&
-                                p.host === detected.host &&
-                                p.port === detected.port
-                        );
+                if (match) {
+                    usedPrevIds.add(match.id);
+                    if (match.displayName) {
+                        return { ...detected, displayName: match.displayName };
                     }
-
-                    // 3. EnvKey match (fallback)
-                    // Useful if just port/host changed but it's the "same" logical connection in .env
-                    if (!match && detected.envKey) {
-                        match = prev.find(
-                            (p) =>
-                                !usedPrevIds.has(p.id) &&
-                                p.envKey === detected.envKey
-                        );
-                    }
-
-                    if (match) {
-                        usedPrevIds.add(match.id);
-                        if (match.displayName) {
-                            return { ...detected, displayName: match.displayName };
-                        }
-                    }
-                    return detected;
-                });
+                }
+                return detected;
             });
-        },
-        []
-    );
-
-    const updateConnectionDisplayName = useCallback(
-        (connectionId: string, displayName: string) => {
-            setConnections((prev) =>
-                prev.map((c) =>
-                    c.id === connectionId ? { ...c, displayName } : c
-                )
-            );
-        },
-        []
-    );
-
-    /**
-     * Limpia las comillas de las conexiones antes de ejecutar SQL
-     */
-    const cleanConnections = (
-        connectionsToClean: DatabaseConnection[]
-    ): DatabaseConnection[] => {
-        return connectionsToClean.map((connection) => {
-            const fixedConnection: DatabaseConnection = {
-                id: cleanQuotes(connection.id) || connection.id,
-                envKey: connection.envKey,
-                displayName: connection.displayName,
-                type: cleanQuotes(connection.type),
-                host: cleanQuotes(connection.host),
-                db: cleanQuotes(connection.db),
-                schema: cleanQuotes(connection.schema),
-                user: cleanQuotes(connection.user),
-                password: cleanQuotes(connection.password),
-                port: connection.port,
-            };
-            return fixedConnection;
         });
-    };
+    }, []);
+
+    const updateConnectionDisplayName = useCallback((connectionId: string, displayName: string) => {
+        setConnections((prev) => prev.map((c) => (c.id === connectionId ? { ...c, displayName } : c)));
+    }, []);
 
     /**
-     * Ejecuta SQL en las conexiones seleccionadas
+     * Ejecuta SQL en las conexiones seleccionadas.
+     * Si `merge` es true (reintentos), los resultados nuevos reemplazan a los
+     * anteriores de esos tenants en vez de borrar la consola.
      */
     const executeSql = async (
         sql: string,
-        selectedConnections: DatabaseConnection[]
+        selectedConnections: DatabaseConnection[],
+        options: RunOptions,
+        merge = false
     ) => {
         if (selectedConnections.length === 0) {
             console.warn("No hay conexiones seleccionadas");
             return;
         }
 
-        const fixedConnections = cleanConnections(selectedConnections);
+        const executionId = crypto.randomUUID();
+        currentExecutionId.current = executionId;
+        const retriedIds = new Set(selectedConnections.map((c) => c.id));
+        const base = (prev: ExecutionResult[] | null) =>
+            merge ? (prev ?? []).filter((r) => !retriedIds.has(String(r.connection_id))) : [];
+
+        let buffer: ExecutionResult[] = [];
+        let rafId: number | null = null;
+        const unlisteners: UnlistenFn[] = [];
+
+        const flushBuffer = () => {
+            if (buffer.length > 0) {
+                const toAppend = buffer;
+                buffer = [];
+                setExecutionResults((prev) => [...(prev ?? []), ...toAppend]);
+            }
+            rafId = null;
+        };
 
         try {
             setIsExecutingSql(true);
-            setExecutionResults([]); // Inicializar vacío para empezar a pintar progresivamente
+            setExecutionPhase("running");
+            setExecutionResults((prev) => base(prev));
 
-            // Buffer local para acumular resultados y evitar re-renders excesivos
-            let buffer: ExecutionResult[] = [];
-            let rafId: number | null = null;
-
-            const flushBuffer = () => {
-                if (buffer.length > 0) {
-                    const toAppend = [...buffer];
-                    buffer = [];
-                    setExecutionResults((prev) => {
-                        const existing = prev || [];
-                        return [...existing, ...toAppend];
-                    });
-                }
-                rafId = null;
-            };
-
-            // Escuchar el progreso (acepta lotes o resultados individuales)
-            const unlisten = await listen<ExecutionResult[] | ExecutionResult>(
-                "sql-execution-progress",
-                (event) => {
-                    const newItems = Array.isArray(event.payload)
-                        ? event.payload
-                        : [event.payload];
-
-                    buffer.push(...newItems);
-
-                    // Programar renderizado suave en el siguiente frame
-                    if (rafId === null) {
-                        rafId = requestAnimationFrame(flushBuffer);
-                    }
-                }
+            unlisteners.push(
+                await listen<ExecutionResult[] | ExecutionResult>("sql-execution-progress", (event) => {
+                    if (currentExecutionId.current !== executionId) return;
+                    const items = Array.isArray(event.payload) ? event.payload : [event.payload];
+                    buffer.push(...items);
+                    if (rafId === null) rafId = requestAnimationFrame(flushBuffer);
+                })
+            );
+            unlisteners.push(
+                await listen<{ executionId: string; phase: ExecutionPhase }>("sql-execution-phase", (event) => {
+                    if (event.payload.executionId === executionId) setExecutionPhase(event.payload.phase);
+                })
             );
 
-            const results = await invoke<ExecutionResult[]>("execute_sql", {
-                sql,
-                connections: fixedConnections,
+            const results = await executeSqlService(sql, selectedConnections.map(sanitizeConnection), {
+                ...options,
+                executionId,
             });
 
-            // Dejar de escuchar el progreso y cancelar cualquier frame pendiente
-            unlisten();
-            if (rafId !== null) {
-                cancelAnimationFrame(rafId);
-            }
-
-            // Guardar resultados finales consolidados
-            setExecutionResults(results);
-
-            const successful = results.filter((r) => r.success).length;
-            const failed = results.length - successful;
-            console.log(
-                `Ejecución finalizada: ${successful} exitosas, ${failed} fallidas de ${results.length} totales`
-            );
+            if (rafId !== null) cancelAnimationFrame(rafId);
+            rafId = null;
+            buffer = [];
+            setExecutionResults((prev) => [...base(prev), ...results]);
+            return results;
         } catch (error) {
             console.error("Error ejecutando SQL:", error);
-            setExecutionResults([
+            setExecutionResults((prev) => [
+                ...base(prev),
                 {
                     connection_id: "Error",
                     success: false,
+                    status: "failed",
                     message: `Error al ejecutar: ${error}`,
                 },
             ]);
         } finally {
+            unlisteners.forEach((u) => u());
+            if (rafId !== null) cancelAnimationFrame(rafId);
+            if (currentExecutionId.current === executionId) currentExecutionId.current = null;
             setIsExecutingSql(false);
+            setExecutionPhase(null);
         }
     };
+
+    const cancelExecution = useCallback(async () => {
+        const id = currentExecutionId.current;
+        if (!id) return false;
+        return cancelExecutionService(id);
+    }, []);
+
+    const clearResults = useCallback(() => setExecutionResults(null), []);
 
     return {
         connections,
         isExecutingSql,
         executionResults,
+        executionPhase,
         handleEnvConfirm,
         updateConnectionDisplayName,
         executeSql,
+        cancelExecution,
+        clearResults,
     };
 };

@@ -10,10 +10,14 @@ export interface DatabaseConnection {
     user?: string;
     password?: string;
     port?: number;
+    /** disable | prefer | require | verify-full (por defecto prefer) */
+    sslmode?: string;
+    /** Grupo lógico del tenant (ej: prod, staging). Los tenants "prod" piden confirmación reforzada. */
+    group?: string;
 }
 
 // Campos válidos para una conexión de base de datos
-const POSTGRES_FIELDS = [
+export const POSTGRES_FIELDS = [
     "TYPE",
     "HOST",
     "DB",
@@ -21,192 +25,113 @@ const POSTGRES_FIELDS = [
     "USER",
     "PASSWORD",
     "PORT",
+    "SSLMODE",
+    "GROUP",
 ] as const;
 type PostgresField = (typeof POSTGRES_FIELDS)[number];
 
+// Más largos primero para que la alternancia no corte nombres (no aplica hoy, pero evita sorpresas)
+const LINE_REGEX = new RegExp(
+    `^POSTGRES_(${[...POSTGRES_FIELDS].sort((a, b) => b.length - a.length).join("|")})_(.+?)\\s*=\\s*(.+)$`,
+    "i"
+);
+
+// Comillas simples y dobles: ASCII y tipográficas (U+2018, U+2019, U+201C, U+201D)
+const LEADING_QUOTES = /^['"‘’“”]+/;
+const TRAILING_QUOTES = /['"‘’“”]+$/;
+
 /**
- * Limpia todas las comillas (simples y dobles, normales y Unicode) del inicio y final de un string
- * Itera hasta que no haya más cambios para manejar comillas anidadas
+ * Limpia todas las comillas (simples y dobles, normales y Unicode) del inicio y final de un string.
+ * Acepta valores no-string (devuelve undefined para null/undefined).
  */
-function cleanQuotes(value: string): string {
-    if (!value) return value;
-
-    let cleaned = value.trim();
-    let iterations = 0;
-    const maxIterations = 10; // Límite de seguridad
-
-    // Iterar hasta que no haya más cambios
-    while (iterations < maxIterations) {
+export function cleanQuotes(value: unknown): string | undefined {
+    if (value === undefined || value === null) return undefined;
+    let cleaned = String(value).trim();
+    for (let i = 0; i < 10; i++) {
         const before = cleaned;
+        cleaned = cleaned.replace(LEADING_QUOTES, "").replace(TRAILING_QUOTES, "").trim();
+        if (before === cleaned) break;
+    }
+    return cleaned;
+}
 
-        // Eliminar todas las variantes de comillas simples del inicio y final
-        // Incluye: ' (normal), ' (left single U+2018), ' (right single U+2019)
-        cleaned = cleaned.replace(/^['''']+/g, "").replace(/['''']+$/g, "");
-
-        // Eliminar todas las variantes de comillas dobles del inicio y final
-        // Incluye: " (normal), " (left double U+201C), " (right double U+201D)
-        cleaned = cleaned.replace(/^[""""]+/g, "").replace(/[""""]+$/g, "");
-
-        // Si no hubo cambios, salir
-        if (before === cleaned) {
+function applyField(connection: DatabaseConnection, field: PostgresField, value: string) {
+    switch (field) {
+        case "TYPE":
+            connection.type = value;
             break;
-        }
-
-        iterations++;
+        case "HOST":
+            connection.host = value;
+            break;
+        case "DB":
+            connection.db = value;
+            break;
+        case "SCHEMA":
+            connection.schema = value;
+            break;
+        case "USER":
+            connection.user = value;
+            break;
+        case "PASSWORD":
+            connection.password = value;
+            break;
+        case "PORT":
+            connection.port = parseInt(value, 10) || undefined;
+            break;
+        case "SSLMODE":
+            connection.sslmode = value.toLowerCase();
+            break;
+        case "GROUP":
+            connection.group = value;
+            break;
     }
-
-    return cleaned.trim();
 }
 
 /**
- * Parsea el contenido de un archivo .env y agrupa las conexiones de base de datos
- * El patrón esperado es: POSTGRES_{FIELD}_{CONNECTION_ID} = 'valor'
- */
-export function parseEnvConnections(envContent: string): DatabaseConnection[] {
-    const connections = new Map<string, DatabaseConnection>();
-
-    // Dividir por líneas
-    const lines = envContent.split("\n");
-
-    for (const line of lines) {
-        // Ignorar líneas vacías o comentarios
-        const trimmedLine = line.trim();
-        if (!trimmedLine || trimmedLine.startsWith("#")) {
-            continue;
-        }
-
-        // Buscar el patrón POSTGRES_{FIELD}_{CONNECTION_ID} = valor
-        const match = trimmedLine.match(
-            /^POSTGRES_(TYPE|HOST|DB|SCHEMA|USER|PASSWORD|PORT)_(.+?)\s*=\s*(.+)$/i
-        );
-
-        if (match) {
-            const [, field, connectionId, rawValue] = match;
-            const upperField = field.toUpperCase() as PostgresField;
-
-            // Limpiar el valor usando la función helper
-            const value = cleanQuotes(rawValue);
-
-            // Obtener o crear la conexión
-            if (!connections.has(connectionId)) {
-                connections.set(connectionId, { id: connectionId });
-            }
-
-            const connection = connections.get(connectionId)!;
-
-            // Asignar el valor al campo correspondiente
-            switch (upperField) {
-                case "TYPE":
-                    connection.type = value;
-                    break;
-                case "HOST":
-                    connection.host = value;
-                    break;
-                case "DB":
-                    connection.db = value;
-                    break;
-                case "SCHEMA":
-                    connection.schema = value;
-                    break;
-                case "USER":
-                    connection.user = value;
-                    break;
-                case "PASSWORD":
-                    connection.password = value;
-                    break;
-                case "PORT":
-                    connection.port = parseInt(value, 10) || undefined;
-                    break;
-            }
-        }
-    }
-
-    return Array.from(connections.values());
-}
-
-/**
- * Obtiene las conexiones únicas (basado en la combinación DB + SCHEMA)
- * ya que el mismo ID de conexión puede tener diferentes DBs
+ * Parsea el contenido .env en conexiones.
+ *
+ * Cada conexión se identifica por el sufijo de sus variables (POSTGRES_{FIELD}_{SUFIJO}).
+ * Dos conexiones con el mismo sufijo se separan cuando hay una línea en blanco entre ellas
+ * o cuando un campo se repite (permite reutilizar el mismo sufijo en bloques distintos).
  */
 export function getUniqueConnections(envContent: string): DatabaseConnection[] {
     const allConnections: DatabaseConnection[] = [];
-    const lines = envContent.split("\n");
+    // Conexión abierta por sufijo dentro del bloque actual
+    let open = new Map<string, { conn: DatabaseConnection; fields: Set<string> }>();
 
-    // Agrupar líneas en bloques (separados por líneas vacías)
-    const blocks: string[][] = [];
-    let currentBlock: string[] = [];
+    const closeBlock = () => {
+        open = new Map();
+    };
 
-    for (const line of lines) {
-        const trimmedLine = line.trim();
-        if (!trimmedLine) {
-            if (currentBlock.length > 0) {
-                blocks.push(currentBlock);
-                currentBlock = [];
-            }
-        } else if (!trimmedLine.startsWith("#")) {
-            currentBlock.push(trimmedLine);
+    for (const line of envContent.split("\n")) {
+        const trimmed = line.trim();
+        if (!trimmed) {
+            closeBlock();
+            continue;
         }
-    }
-    if (currentBlock.length > 0) {
-        blocks.push(currentBlock);
-    }
+        if (trimmed.startsWith("#")) continue;
 
-    // Procesar cada bloque como una conexión independiente
-    for (let blockIndex = 0; blockIndex < blocks.length; blockIndex++) {
-        const block = blocks[blockIndex];
-        const connection: DatabaseConnection = { id: "" };
-        let baseId = "";
+        const match = trimmed.match(LINE_REGEX);
+        if (!match) continue;
 
-        for (const line of block) {
-            const match = line.match(
-                /^POSTGRES_(TYPE|HOST|DB|SCHEMA|USER|PASSWORD|PORT)_(.+?)\s*=\s*(.+)$/i
-            );
+        const [, rawField, rawKey, rawValue] = match;
+        const field = rawField.toUpperCase() as PostgresField;
+        const envKey = cleanQuotes(rawKey) ?? rawKey;
+        const value = cleanQuotes(rawValue) ?? "";
 
-            if (match) {
-                const [, field, connectionId, rawValue] = match;
-                const upperField = field.toUpperCase();
-
-                // Limpiar comillas usando la función helper
-                const value = cleanQuotes(rawValue);
-
-                if (!baseId) {
-                    // Limpiar también el connectionId
-                    baseId = cleanQuotes(connectionId);
-                }
-
-                switch (upperField) {
-                    case "TYPE":
-                        connection.type = value;
-                        break;
-                    case "HOST":
-                        connection.host = value;
-                        break;
-                    case "DB":
-                        connection.db = value;
-                        break;
-                    case "SCHEMA":
-                        connection.schema = value;
-                        break;
-                    case "USER":
-                        connection.user = value;
-                        break;
-                    case "PASSWORD":
-                        connection.password = value;
-                        break;
-                    case "PORT":
-                        connection.port = parseInt(value, 10) || undefined;
-                        break;
-                }
-            }
+        let entry = open.get(envKey.toUpperCase());
+        if (!entry || entry.fields.has(field)) {
+            entry = { conn: { id: "", envKey }, fields: new Set() };
+            open.set(envKey.toUpperCase(), entry);
+            allConnections.push(entry.conn);
         }
-
-        if (baseId) {
-            connection.envKey = baseId;
-            const cleanDb = connection.db ? cleanQuotes(connection.db) : "";
-            connection.id = cleanDb || `${baseId}_${blockIndex + 1}`;
-            allConnections.push(connection);
-        }
+        entry.fields.add(field);
+        applyField(entry.conn, field, value);
     }
+
+    allConnections.forEach((conn, index) => {
+        conn.id = conn.db || `${conn.envKey}_${index + 1}`;
+    });
 
     // Desambiguar ids repetidos (mismo db, distinto puerto/host) para que cada chip sea identificable
     const idCount = new Map<string, number>();
@@ -224,6 +149,9 @@ export function getUniqueConnections(envContent: string): DatabaseConnection[] {
         if (usedIds.has(candidate) && (conn.host || conn.port != null)) {
             candidate = `${conn.id}_${conn.host ?? "host"}_${conn.port ?? ""}`;
         }
+        if (usedIds.has(candidate) && conn.schema) {
+            candidate = `${conn.id}_${conn.schema}`;
+        }
         let suffix = 0;
         while (usedIds.has(candidate)) {
             suffix++;
@@ -239,27 +167,42 @@ export function getUniqueConnections(envContent: string): DatabaseConnection[] {
 /**
  * Convierte un array de conexiones de base de datos a formato .env
  */
-export function serializeEnvConnections(
-    connections: DatabaseConnection[]
-): string {
+export function serializeEnvConnections(connections: DatabaseConnection[]): string {
     return connections
         .filter((conn): conn is DatabaseConnection => conn != null && typeof conn === "object")
         .map((conn, index) => {
             const raw = conn.envKey ?? conn.id ?? "";
             const suffix =
-                (typeof raw === "string" ? raw : String(raw)).toUpperCase() ||
-                `CONNECTION_${index + 1}`;
+                (typeof raw === "string" ? raw : String(raw)).toUpperCase() || `CONNECTION_${index + 1}`;
             const lines: string[] = [];
             if (conn.type) lines.push(`POSTGRES_TYPE_${suffix} = "${conn.type}"`);
             if (conn.host) lines.push(`POSTGRES_HOST_${suffix} = "${conn.host}"`);
             if (conn.db) lines.push(`POSTGRES_DB_${suffix} = "${conn.db}"`);
-            if (conn.schema)
-                lines.push(`POSTGRES_SCHEMA_${suffix} = "${conn.schema}"`);
+            if (conn.schema) lines.push(`POSTGRES_SCHEMA_${suffix} = "${conn.schema}"`);
             if (conn.user) lines.push(`POSTGRES_USER_${suffix} = "${conn.user}"`);
-            if (conn.password)
-                lines.push(`POSTGRES_PASSWORD_${suffix} = "${conn.password}"`);
+            if (conn.password) lines.push(`POSTGRES_PASSWORD_${suffix} = "${conn.password}"`);
             if (conn.port) lines.push(`POSTGRES_PORT_${suffix} = ${conn.port}`);
+            if (conn.sslmode) lines.push(`POSTGRES_SSLMODE_${suffix} = "${conn.sslmode}"`);
+            if (conn.group) lines.push(`POSTGRES_GROUP_${suffix} = "${conn.group}"`);
             return lines.join("\n");
         })
         .join("\n\n");
+}
+
+/** Conexión lista para enviarse al backend (sin comillas residuales). */
+export function sanitizeConnection(connection: DatabaseConnection): DatabaseConnection {
+    return {
+        id: cleanQuotes(connection.id) || connection.id,
+        envKey: connection.envKey,
+        displayName: connection.displayName,
+        type: cleanQuotes(connection.type),
+        host: cleanQuotes(connection.host),
+        db: cleanQuotes(connection.db),
+        schema: cleanQuotes(connection.schema),
+        user: cleanQuotes(connection.user),
+        password: cleanQuotes(connection.password),
+        port: connection.port,
+        sslmode: cleanQuotes(connection.sslmode),
+        group: cleanQuotes(connection.group),
+    };
 }

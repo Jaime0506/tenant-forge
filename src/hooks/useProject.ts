@@ -14,6 +14,10 @@ export interface ProjectData {
     tags: string[];
     connections?: string;
     scripts?: string;
+    /** JSON de ProjectSettings (ver services/execution.service.ts) */
+    settings?: string;
+    /** true si el keychain del SO no estuvo disponible y las contraseñas siguen en la base local */
+    insecure_storage?: boolean;
 }
 
 export type ProjectSubmitCallback<T = void> = (

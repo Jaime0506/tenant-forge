@@ -6,6 +6,13 @@ import {
 } from "@/components/ui/tooltip";
 import { Check, Pencil, Server } from "lucide-react";
 import { DatabaseConnection } from "./envParser";
+import { MigrationStatus } from "@/services/execution.service";
+
+const MIGRATION_DOT: Record<MigrationStatus["state"], { cls: string; label: string }> = {
+  applied: { cls: "bg-success", label: "Script ya aplicado" },
+  pending: { cls: "bg-warning", label: "Script pendiente" },
+  error: { cls: "bg-error", label: "No se pudo consultar" },
+};
 
 function connectionLabel(conn: DatabaseConnection): string {
   return conn.displayName || conn.db || conn.id || "Conexión";
@@ -16,6 +23,7 @@ interface ConnectionChipProps {
   isSelected: boolean;
   onSelect: () => void;
   onRename?: (connectionId: string, displayName: string) => void;
+  migration?: MigrationStatus;
 }
 
 export default function ConnectionChip({
@@ -23,6 +31,7 @@ export default function ConnectionChip({
   isSelected,
   onSelect,
   onRename,
+  migration,
 }: ConnectionChipProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(connectionLabel(connection));
@@ -93,6 +102,23 @@ export default function ConnectionChip({
                 {connectionLabel(connection)}
               </span>
             )}
+            {connection.group && (
+              <span
+                className={`px-1 py-px rounded text-[9px] font-mono uppercase leading-none border ${
+                  connection.group.toLowerCase() === "prod"
+                    ? "bg-error/15 text-error border-error/30"
+                    : "bg-surface-3 text-muted-foreground border-surface-border"
+                }`}
+              >
+                {connection.group}
+              </span>
+            )}
+            {migration && (
+              <span
+                className={`size-1.5 rounded-full shrink-0 ${MIGRATION_DOT[migration.state].cls}`}
+                aria-label={MIGRATION_DOT[migration.state].label}
+              />
+            )}
           </button>
 
           {/* Botón para renombrar al pasar el cursor */}
@@ -135,6 +161,22 @@ export default function ConnectionChip({
             <div className="flex justify-between gap-4 text-muted-foreground">
               <span>Host:</span>
               <span className="text-foreground">{connection.host}:{connection.port || 5432}</span>
+            </div>
+          )}
+          {migration && (
+            <div className="flex justify-between gap-4 text-muted-foreground">
+              <span>Script:</span>
+              <span className="text-foreground text-right">
+                {MIGRATION_DOT[migration.state].label}
+                {migration.appliedAt ? ` (${migration.appliedAt})` : ""}
+                {migration.message ? `: ${migration.message}` : ""}
+              </span>
+            </div>
+          )}
+          {connection.sslmode && (
+            <div className="flex justify-between gap-4 text-muted-foreground">
+              <span>SSL:</span>
+              <span className="text-foreground">{connection.sslmode}</span>
             </div>
           )}
           {connection.user && (
