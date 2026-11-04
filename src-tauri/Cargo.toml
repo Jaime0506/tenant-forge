@@ -27,3 +27,20 @@ rusqlite = { version = "0.37", features = ["bundled"] }
 tokio = { version = "1", features = ["full"] }
 tokio-postgres = "0.7"
 futures = "0.3"
+tokio-util = "0.7"
+native-tls = "0.2"
+postgres-native-tls = "0.5"
+sha2 = "0.10"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+keyring = { version = "3", features = ["windows-native"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+keyring = { version = "3", features = ["apple-native"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+keyring = { version = "3", features = ["sync-secret-service", "crypto-rust"] }
+
+[target.'cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))'.dependencies]
+keyring = "3"

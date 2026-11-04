@@ -60,3 +60,27 @@ ON CONFLICT (email) DO NOTHING;
 ## 3. View Results
 
 After clicking **Run**, you should see successful execution results for all 3 tenants (assuming the databases exist and are accessible).
+
+## 4. Optional connection fields
+
+```properties
+# TLS: disable | prefer (default) | require | verify-full
+POSTGRES_SSLMODE_TENANT_1="require"
+
+# Logical group. Tenants in the "prod" group ask for stronger confirmation.
+POSTGRES_GROUP_TENANT_1="prod"
+```
+
+Tenants that share a database but use different schemas are supported: set `POSTGRES_SCHEMA_*` per tenant and the migration tracking table is created inside that schema.
+
+## 5. Execution modes and migration tracking
+
+| Mode | Behaviour |
+| --- | --- |
+| Independiente | Each tenant commits on its own (classic behaviour). |
+| Todo o nada | Every tenant runs inside a transaction and waits; Tenant Forge commits only if **all** succeeded, otherwise it rolls back everywhere. |
+| Dry-run | Runs and always rolls back. Nothing is persisted. |
+
+With **Registrar como migración** enabled (default for non read-only scripts), each tenant gets a row in `_tenant_forge_migrations` (script SHA-256, name, date, OS user, app version, duration) inside the same transaction as the script. Running the same script again marks those tenants as *skipped*; tick **Forzar** to run it anyway.
+
+> Statements that Postgres cannot run inside a transaction (`CREATE INDEX CONCURRENTLY`, `VACUUM`, `CREATE DATABASE`...) or scripts with their own `BEGIN`/`COMMIT` only work in **Independiente** mode.

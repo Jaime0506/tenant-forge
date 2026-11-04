@@ -1,19 +1,28 @@
 import { useState, useEffect, useCallback } from "react";
 import EnvEditor from "./EnvEditor";
-import SqlEditor from "./SqlEditor";
+import SqlEditor, { RunRequest } from "./SqlEditor";
 import useStoreManagement from "@/hooks/useStoreManagement";
 import EnvEditorWarningIcon from "./EnvEditorWarningIcon";
 import { ProjectData } from "@/hooks/useProject";
 import { useProjectConnections } from "@/hooks/useProjectConnections";
 import { useProjectService } from "@/hooks/useProjectService";
 import { toast } from "sonner";
-import { Save, Database, FileCode2 } from "lucide-react";
+import { Save, Database, FileCode2, History, Settings2, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DatabaseConnection,
   getUniqueConnections,
+  sanitizeConnection,
   serializeEnvConnections,
 } from "./envParser";
+import ProjectSettingsDialog from "./ProjectSettingsDialog";
+import ExecutionHistoryDialog from "./ExecutionHistoryDialog";
+import {
+  parseSettings,
+  ProjectSettings,
+  saveProjectSettingsService,
+} from "@/services/execution.service";
+import { getProjectByIdService } from "@/services/project.service";
 
 function normalizeConnections(
   list: DatabaseConnection[]
@@ -67,6 +76,23 @@ export default function ProjectEditor({ id, project }: ProjectEditorProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
   const { saveProject } = useProjectService();
+  const [settings, setSettings] = useState<ProjectSettings>(() => parseSettings(project?.settings));
+  const [insecureStorage, setInsecureStorage] = useState(!!project?.insecure_storage);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+  // La lista de proyectos puede estar desactualizada: refrescar settings y estado del keychain
+  useEffect(() => {
+    if (!id) return;
+    getProjectByIdService(id)
+      .then((fresh) => {
+        const p = fresh as ProjectData | null;
+        if (!p) return;
+        setSettings(parseSettings(p.settings));
+        setInsecureStorage(!!p.insecure_storage);
+      })
+      .catch((e) => console.error("No se pudo refrescar el proyecto:", e));
+  }, [id]);
 
   const { isEnvEditorWarningShown } = useStoreManagement();
 
@@ -74,28 +100,46 @@ export default function ProjectEditor({ id, project }: ProjectEditorProps) {
     connections,
     isExecutingSql,
     executionResults,
+    executionPhase,
     handleEnvConfirm,
     updateConnectionDisplayName,
     executeSql,
+    cancelExecution,
+    clearResults,
   } = useProjectConnections();
 
-  const handleExecuteSql = async (selectedConnections: DatabaseConnection[]) => {
-    await executeSql(sqlContent, selectedConnections);
+  const handleExecuteSql = async (request: RunRequest) => {
+    await executeSql(
+      sqlContent,
+      request.connections,
+      {
+        projectId: id,
+        mode: request.mode,
+        trackMigration: request.trackMigration,
+        force: request.force,
+        concurrency: settings.concurrency,
+        statementTimeoutMs: settings.statementTimeoutMs || undefined,
+        lockTimeoutMs: settings.lockTimeoutMs || undefined,
+        maxRows: settings.maxRows,
+      },
+      request.merge
+    );
   };
 
-  const cleanQuotes = (value: string | undefined): string | undefined => {
-    if (!value) return value;
-    let cleaned = value.trim();
-    let iterations = 0;
-    const maxIterations = 10;
-    while (iterations < maxIterations) {
-      const before = cleaned;
-      cleaned = cleaned.replace(/^['''']+/g, "").replace(/['''']+$/g, "");
-      cleaned = cleaned.replace(/^[""""]+/g, "").replace(/[""""]+$/g, "");
-      if (before === cleaned) break;
-      iterations++;
+  const handleCancel = async () => {
+    const ok = await cancelExecution();
+    if (ok) toast.info("Cancelando ejecución...");
+  };
+
+  const handleSaveSettings = async (next: ProjectSettings) => {
+    try {
+      await saveProjectSettingsService(id, next);
+      setSettings(next);
+      toast.success("Configuración guardada");
+    } catch (e) {
+      toast.error(`No se pudo guardar la configuración: ${e}`);
+      throw e;
     }
-    return cleaned.trim();
   };
 
   const handleGlobalSave = useCallback(async () => {
@@ -142,24 +186,25 @@ export default function ProjectEditor({ id, project }: ProjectEditorProps) {
           }
 
           return {
-            id: cleanQuotes(connection.id) || connection.id,
+            ...sanitizeConnection(connection),
             envKey: connection.envKey ?? match?.envKey,
             displayName: match?.displayName,
-            type: cleanQuotes(connection.type),
-            host: cleanQuotes(connection.host),
-            db: cleanQuotes(connection.db),
-            schema: cleanQuotes(connection.schema),
-            user: cleanQuotes(connection.user),
-            password: cleanQuotes(connection.password),
-            port: connection.port,
           };
         });
       }
 
-      await saveProject(id, fixedConnections, sqlContent);
+      const result = (await saveProject(id, fixedConnections, sqlContent)) as
+        | { success: boolean; message: string }
+        | undefined;
+      const insecure = !!result?.message?.includes("keychain");
+      setInsecureStorage(insecure);
       const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       setLastSavedTime(timeStr);
-      toast.success("Proyecto guardado correctamente");
+      if (insecure) {
+        toast.warning(result!.message);
+      } else {
+        toast.success("Proyecto guardado correctamente");
+      }
     } catch (error) {
       console.error("Error guardando proyecto:", error);
       toast.error(`Error al guardar: ${error}`);
@@ -256,6 +301,38 @@ export default function ProjectEditor({ id, project }: ProjectEditorProps) {
 
         {/* Acciones principales */}
         <div className="flex items-center gap-2">
+          {insecureStorage && (
+            <span
+              className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded bg-warning/10 text-warning border border-warning/30"
+              title="El keychain del sistema no está disponible: las contraseñas se guardan en texto plano en la base local"
+            >
+              <ShieldAlert className="size-3.5" />
+              Contraseñas sin cifrar
+            </span>
+          )}
+          <Button
+            type="button"
+            onClick={() => setIsHistoryOpen(true)}
+            disabled={!id}
+            variant="surface"
+            size="auto"
+            className="px-2.5 py-1.5 text-xs"
+            title="Historial de ejecuciones"
+          >
+            <History className="size-3.5 text-cerulean-400" />
+            <span className="hidden md:inline">Historial</span>
+          </Button>
+          <Button
+            type="button"
+            onClick={() => setIsSettingsOpen(true)}
+            disabled={!id}
+            variant="surface"
+            size="auto"
+            className="px-2.5 py-1.5 text-xs"
+            title="Configuración de ejecución"
+          >
+            <Settings2 className="size-3.5 text-cerulean-400" />
+          </Button>
           <Button
             type="button"
             onClick={handleGlobalSave}
@@ -320,13 +397,31 @@ export default function ProjectEditor({ id, project }: ProjectEditorProps) {
               onChange={setSqlContent}
               connections={connections}
               onExecute={handleExecuteSql}
+              onCancel={handleCancel}
               onRenameConnection={updateConnectionDisplayName}
               isExecutingSql={isExecutingSql}
+              executionPhase={executionPhase}
               executionResults={executionResults}
+              onClearResults={clearResults}
+              defaultMode={settings.defaultMode}
+              projectName={project.name}
             />
           </div>
         </div>
       </div>
+
+      <ProjectSettingsDialog
+        open={isSettingsOpen}
+        settings={settings}
+        onClose={() => setIsSettingsOpen(false)}
+        onSave={handleSaveSettings}
+      />
+      <ExecutionHistoryDialog
+        open={isHistoryOpen}
+        projectId={id}
+        onClose={() => setIsHistoryOpen(false)}
+        onLoadSql={setSqlContent}
+      />
     </div>
   );
 }

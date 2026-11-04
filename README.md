@@ -30,6 +30,12 @@ Unlike web-based tools, **Tenant Forge operates entirely offline**. Your credent
 -   **🔐 Privacy & Security First**: Zero data transmission to external servers. All operations are local.
 -   **⚡ Batch SQL Execution**: Execute a single SQL statement across dozens of database connections defined in your `.env` file.
 -   **📂 Multi-Project Management**: Organize your work into distinct projects, each with its own configuration and saved state.
+-   **🧪 Execution Modes**: Run scripts **Independently** (commit per tenant), **All-or-nothing** (commit only if every tenant succeeds, otherwise roll back everywhere) or as a **Dry-run** (always roll back).
+-   **🗂️ Per-tenant Migration Tracking**: Applied scripts are recorded in a `_tenant_forge_migrations` table inside each tenant, so re-running a script skips tenants where it was already applied.
+-   **🕑 Execution History**: Every run is stored locally with per-tenant status, duration and messages; failed tenants can be retried in one click.
+-   **🛑 Timeouts & Cancellation**: Configurable `statement_timeout` / `lock_timeout` and a Cancel button that interrupts running queries.
+-   **🔑 OS Keychain**: Passwords are stored in the OS keychain (Windows Credential Manager, macOS Keychain, Secret Service on Linux), not in the local database.
+-   **🔒 TLS**: Per-connection `SSLMODE` (`disable`, `prefer`, `require`, `verify-full`).
 -   **💾 Local Storage**: All project metadata is safely stored in a local SQLite database.
 -   **🎨 Modern UI**: Built with React and TailwindCSS for a sleek, responsive user experience.
 -   **Rust-Powered Performance**: Leverages the power of Rust via Tauri for blazing fast performance and low memory footprint.
@@ -82,7 +88,24 @@ Ensure you have the following installed on your machine:
     -   _The app parses standard key=value connection strings._
     -   See [EXAMPLE.md](./EXAMPLE.md) for a complete configuration guide.
 
-3.  **Execute SQL**: Write your SQL query in the editor and hit run. Watch as it executes across all valid connections found in your configuration.
+3.  **Execute SQL**: Write your SQL query in the editor, pick an execution mode and hit run. Watch as it executes across all selected connections.
+
+    -   Destructive statements (`DROP`, `TRUNCATE`, `DELETE`/`UPDATE` without `WHERE`) ask for confirmation. Tenants in the `prod` group require typing the project name.
+    -   `SELECT` results are shown per tenant, with a **Compare** view that highlights tenants that differ from the majority.
+    -   Use **Ver estado** to check in which tenants the current script is already applied.
+
+## 🧪 Testing
+
+```bash
+pnpm test                      # frontend unit tests (vitest)
+cd src-tauri && cargo test     # Rust unit tests
+
+# Integration tests against real Postgres (uses docker-compose.yml)
+docker compose up -d
+TF_PG_TESTS=1 cargo test
+```
+
+Ports and host can be overridden with `TF_PG_HOST`, `TF_PG_PORT_MAIN` (default 5432) and `TF_PG_PORT_3` (default 5433), e.g. when a local Postgres already uses 5432.
 
 ## 🤝 Contributing
 
