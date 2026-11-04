@@ -1,28 +1,6 @@
-import { DatabaseConnection } from "./envParser";
-import SqlExecutionInspector, { ExecutionResult } from "./SqlExecutionInspector";
+import { ComponentProps } from "react";
+import SqlExecutionInspector from "./SqlExecutionInspector";
 
-interface SqlExecutionResultsProps {
-  results: ExecutionResult[] | null;
-  connections?: DatabaseConnection[];
-  isExecuting?: boolean;
-  onRetryConnection?: (connection: DatabaseConnection) => void;
-  onClear?: () => void;
-}
-
-export default function SqlExecutionResults({
-  results,
-  connections = [],
-  isExecuting = false,
-  onRetryConnection,
-  onClear,
-}: SqlExecutionResultsProps) {
-  return (
-    <SqlExecutionInspector
-      results={results}
-      connections={connections}
-      isExecuting={isExecuting}
-      onRetryConnection={onRetryConnection}
-      onClear={onClear}
-    />
-  );
+export default function SqlExecutionResults(props: ComponentProps<typeof SqlExecutionInspector>) {
+  return <SqlExecutionInspector {...props} />;
 }

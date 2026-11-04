@@ -16,7 +16,6 @@ export const useProjectService = () => {
     ) => {
         try {
             const projects = (await getProjectsService()) as ProjectData[];
-            console.log("projects cargados:", projects);
             callback?.(projects || []);
         } catch (error) {
             console.error("Error al obtener proyectos:", error);
@@ -25,7 +24,7 @@ export const useProjectService = () => {
     };
 
     const saveProject = async (id: number, data: DatabaseConnection[], scripts?: string) => {
-        await saveProjectService(id, data, scripts);
+        return saveProjectService(id, data, scripts);
     };
 
     return {

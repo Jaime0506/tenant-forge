@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Database, CheckSquare, Square, Search } from "lucide-react";
 import { DatabaseConnection } from "./envParser";
 import ConnectionChip from "./ConnectionChip";
+import { MigrationStatus } from "@/services/execution.service";
 
 interface ConnectionsPanelProps {
   connections: DatabaseConnection[];
@@ -10,6 +11,8 @@ interface ConnectionsPanelProps {
   onSelectAll: () => void;
   onSelectNone: () => void;
   onRename?: (connectionId: string, displayName: string) => void;
+  onSelectGroup?: (group: string) => void;
+  migrationStatus?: Map<string, MigrationStatus>;
 }
 
 export default function ConnectionsPanel({
@@ -19,6 +22,8 @@ export default function ConnectionsPanel({
   onSelectAll,
   onSelectNone,
   onRename,
+  onSelectGroup,
+  migrationStatus,
 }: ConnectionsPanelProps) {
   const [filterQuery, setFilterQuery] = useState("");
 
@@ -30,9 +35,18 @@ export default function ConnectionsPanel({
         (c.displayName && c.displayName.toLowerCase().includes(query)) ||
         (c.db && c.db.toLowerCase().includes(query)) ||
         c.id.toLowerCase().includes(query) ||
-        (c.host && c.host.toLowerCase().includes(query))
+        (c.host && c.host.toLowerCase().includes(query)) ||
+        (c.group && c.group.toLowerCase().includes(query))
     );
   }, [connections, filterQuery]);
+
+  const groups = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const c of connections) {
+      if (c.group) counts.set(c.group, (counts.get(c.group) ?? 0) + 1);
+    }
+    return [...counts.entries()].sort(([a], [b]) => a.localeCompare(b));
+  }, [connections]);
 
   if (connections.length === 0) {
     return null;
@@ -68,6 +82,27 @@ export default function ConnectionsPanel({
             </div>
           )}
 
+          {onSelectGroup && groups.length > 0 && (
+            <div className="flex items-center gap-1 border-l border-surface-border/80 pl-2">
+              <span className="text-[10px] text-muted-foreground">Grupo:</span>
+              {groups.map(([group, count]) => (
+                <button
+                  key={group}
+                  type="button"
+                  onClick={() => onSelectGroup(group)}
+                  title={`Seleccionar solo los ${count} tenants del grupo ${group}`}
+                  className={`text-[10px] font-mono px-1.5 py-0.5 rounded border cursor-pointer transition-colors ${
+                    group.toLowerCase() === "prod"
+                      ? "text-error border-error/30 hover:bg-error/10"
+                      : "text-cerulean-300 border-surface-border hover:bg-surface-2"
+                  }`}
+                >
+                  {group} ({count})
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="flex items-center gap-1 border-l border-surface-border/80 pl-2">
             <button
               type="button"
@@ -99,6 +134,7 @@ export default function ConnectionsPanel({
             isSelected={selectedConnections.has(conn.id)}
             onSelect={() => onToggleConnection(conn.id)}
             onRename={onRename}
+            migration={migrationStatus?.get(conn.id)}
           />
         ))}
         {filteredConnections.length === 0 && (
