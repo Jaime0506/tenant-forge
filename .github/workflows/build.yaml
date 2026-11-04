@@ -48,11 +48,8 @@ jobs:
             - name: Rust cache
               uses: swatinem/rust-cache@v2
 
-            - name: macOS system dependencies
-              if: runner.os == 'macOS'
-              run: |
-                  brew update
-                  brew install openssl
+            # macOS no necesita dependencias de sistema: TLS (native-tls) y el keychain
+            # usan los frameworks nativos de Apple, no OpenSSL.
 
             - name: Windows system dependencies
               if: runner.os == 'Windows'
